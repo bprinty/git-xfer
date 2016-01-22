@@ -1,0 +1,53 @@
+#!/usr/bin/env sh
+#
+# git plugin enabling remote repo syncing, because
+# git-annex doesn't seem to fit this need well
+# 
+# @author <bprinty@gmail.com>
+# ------------------------------------------------
+
+
+# meta
+# ----
+usage() {
+    echo "usage: git xfer <subcommand>"
+    echo
+    echo "Available subcommands are:"
+    echo "add  <file>  Add file to be tracked by git xfer"
+    echo "push <name>  Push local files to remote"
+    echo "pull <name>  Pull files from remote server locally"
+}
+
+version() {
+    echo "0.0.1"
+}
+
+
+# exec
+# ----
+main() {
+    if [ "$#" -lt 1 ]; then
+        usage; exit 1
+    fi
+
+    local subcommand="$1"; shift
+
+    case $subcommand in
+        "-h"|"--help")
+            usage; exit 0
+            ;;
+        "-v"|"--version")
+            version; exit 0
+            ;;
+    esac
+
+    local workingdir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+    if [ ! -e "$workingdir/git-xfer-$subcommand" ]; then
+        usage; exit 1
+    fi
+
+    sh "$workingdir/git-xfer-$subcommand" "$@"
+}
+
+main "$@"
+

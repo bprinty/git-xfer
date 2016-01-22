@@ -1,0 +1,39 @@
+#!/usr/bin/env sh
+#
+# push functionality of git-xfer plugin
+# 
+# @author <bprinty@gmail.com>
+# ------------------------------------------------
+
+
+# meta
+# ----
+usage() {
+    echo "usage: git xfer push <name>"
+}
+
+
+# exec
+# ----
+main() {
+    if [ "$#" -lt 1 ]; then
+        usage; exit 1
+    fi
+
+    local dest="$1"; shift
+
+    case $dest in
+        "-h"|"--help")
+            usage; exit 0
+            ;;
+    esac
+
+    if [ `git remote | grep $dest | wc -l` -gt 0 ]; then
+    	echo 'remote found!'
+    else
+    	echo 'remote missing!'
+    fi
+
+}
+
+main "$@"

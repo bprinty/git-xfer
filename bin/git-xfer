@@ -46,6 +46,11 @@ main() {
         usage; exit 1
     fi
 
+    gitdir=`git rev-parse --show-toplevel`
+    if [ ! -e "$gitdir/.git/xfer" ]; then
+        mkdir "$gitdir/.git/xfer"
+    fi
+
     sh "$workingdir/git-xfer-$subcommand" "$@"
 }
 

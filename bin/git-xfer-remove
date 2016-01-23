@@ -1,0 +1,54 @@
+#!/usr/bin/env sh
+#
+# remove file for git-xfer tracking
+# 
+# @author <bprinty@gmail.com>
+# ------------------------------------------------
+
+
+# meta
+# ----
+usage() {
+    echo "usage: git xfer remove <file>"
+}
+
+
+# exec
+# ----
+remove(){
+    fname=`echo "$1" | sed "s|$base|.|"`
+    grep -v "$fname  " "$cache" > "$cache.lck"
+    mv "$cache.lck" "$cache"
+}
+
+main() {
+    if [ "$#" -lt 1 ]; then
+        usage; exit 1
+    fi
+
+    case "$1" in
+        "-h"|"--help")
+            usage; exit 0
+            ;;
+    esac
+
+    touch "$cache"
+    for i in "$@"; do
+        if [ "$i" = "." ]; then
+            fullpath=`pwd`
+        else
+            fullpath=$(cd $(dirname "$i") && pwd -P)/$(basename "$i")
+        fi
+        if [ -d "$fullpath" ]; then
+            for j in `find "$fullpath" -type f`; do
+                remove "$j"
+            done
+        else
+            remove "$fullpath"
+        fi
+    done
+}
+
+base=`git rev-parse --show-toplevel`
+cache="$base/.git/xfer/cache"
+main "$@"

@@ -9,7 +9,7 @@
 # meta
 # ----
 usage() {
-    echo "usage: git xfer push <name>"
+    echo "usage: git xfer push <remote>"
 }
 
 
@@ -28,12 +28,31 @@ main() {
             ;;
     esac
 
-    if [ `git remote | grep $dest | wc -l` -gt 0 ]; then
-    	echo 'remote found!'
+    port="22"
+    case "$1" in
+        "-p"|"--port")
+			port="$2";
+			;;
+	esac
+
+    cd "$base"
+    url=`git remote -v | grep $dest | awk '{ print $2 }' | uniq | sed 's/\.git$//'`
+    if [ $url ]; then
+        for file in `grep -v ",$dest" "$cache" | awk '{ print $2 }'`; do
+			rsync -avz -e "ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress "$file" "$url/$file"
+			remote=`echo "$url" | sed 's/:/  /' | awk '{ print $1 }'`
+			remotedest=`echo "$url" | sed 's/:/  /' | awk '{ print $2 }'`
+			ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$remote" "cd $remotedest; git xfer add \"$file\""
+			grep -v "$file  " "$cache" > "$cache.lck"
+			echo `grep "$file  " "$cache" | sed "s|,$dest||"`,$dest >> "$cache.lck"
+			mv "$cache.lck" "$cache"
+        done
     else
-    	echo 'remote missing!'
+    	echo 'cannot find remote -- try git remote add <remote> <url>'
     fi
 
 }
 
+base=`git rev-parse --show-toplevel`
+cache=$base/.git/xfer/cache
 main "$@"

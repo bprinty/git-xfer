@@ -1,0 +1,37 @@
+#!/usr/bin/env sh
+#
+# push functionality of git-xfer plugin
+# 
+# @author <bprinty@gmail.com>
+# ------------------------------------------------
+
+
+# meta
+# ----
+usage() {
+    echo "usage: git xfer list [options]"
+}
+
+
+# exec
+# ----
+main() {
+
+    touch "$cache"
+    case $1 in
+        "-h"|"--help")
+            usage; exit 0
+            ;;
+        "-v"|"--verbose")
+            cat "$cache"; exit 0
+            ;;
+        "-f"|"--files")
+            cat "$cache" | awk '{ print $2 }'; exit 0
+            ;;
+    esac    
+    cat "$cache" | awk '{ print $2"\t\t"$3 }'
+}
+
+base=`git rev-parse --show-toplevel`
+cache="$base/.git/xfer/cache"
+main "$@"

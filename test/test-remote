@@ -1,0 +1,78 @@
+#!/usr/bin/env sh
+#
+# test add functionality for git plugin
+# 
+# @author <bprinty@gmail.com>
+# ------------------------------------------------
+
+
+# config
+# ------
+base=`git rev-parse --show-toplevel`
+cache="$base/.git/xfer/cache"
+cd "$base/test"
+testdir=/tmp/git-xfer-testing
+rm "$cache"
+touch "$cache"
+mkdir -p "$testdir"
+cp -r "$base" "$testdir/"
+if [ ! `git remote | grep "testserver"` ]; then
+    git remote add testserver $USER@localhost:$testdir/git-xfer
+fi
+
+
+# funcs
+# -----
+clean() {
+    cd "$base/test"
+    rm -f test-local-file test-remote-file
+    git remote remove testserver
+    rm -rf "$testdir"
+    rm "$cache"
+    touch "$cache"
+}
+
+
+# testing
+# -------
+# push
+echo 'test' > test-local-file
+git xfer add test-local-file
+git xfer push testserver -p 2222
+cd "$testdir"/git-xfer/test
+if [ ! -e "test-local-file" ]; then
+    echo "Fail! Cannot push files to remote."
+    clean
+    exit 1
+fi
+if [ `git xfer list | grep "test-local-file" | wc -l` -ne 1 ]; then
+    echo "Fail! Remote not synced."
+    clean
+    exit 1
+fi
+cd "$base/test"
+if [ `git xfer list | grep "test-local-file" | grep "testserver" | wc -l` -ne 1 ]; then
+    echo "Fail! Local not synced with transfer status."
+    clean
+    exit 1
+fi
+
+
+# pull
+cd "$testdir/git-xfer/test"
+echo 'test' > test-remote-file
+git xfer add test-remote-file
+cd "$base/test"
+git xfer pull testserver -p 2222
+if [ ! -e "test-remote-file" ]; then
+    echo "Fail! Cannot pull remote files."
+    clean
+    exit 1
+fi
+if [ `git xfer list | grep "test-remote-file" | wc -l` -ne 1 ]; then
+    echo "Fail! Local not synced."
+    clean
+    exit 1
+fi
+
+clean

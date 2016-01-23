@@ -1,0 +1,57 @@
+#!/usr/bin/env sh
+#
+# pull functionality of git-xfer plugin
+# 
+# @author <bprinty@gmail.com>
+# ------------------------------------------------
+
+
+# meta
+# ----
+usage() {
+    echo "usage: git xfer pull <remote>"
+}
+
+
+# exec
+# ----
+main() {
+    if [ "$#" -lt 1 ]; then
+        usage; exit 1
+    fi
+
+    local dest="$1"; shift
+
+    case $dest in
+        "-h"|"--help")
+            usage; exit 0
+            ;;
+    esac
+
+    port="22"
+    case "$1" in
+        "-p"|"--port")
+            port="$2";
+            ;;
+    esac
+
+    cd "$base"
+    url=`git remote -v | grep $dest | awk '{ print $2 }' | uniq | sed 's/\.git$//'`
+    if [ $url ]; then
+        remote=`echo "$url" | sed 's/:/  /' | awk '{ print $1 }'`
+        remotedest=`echo "$url" | sed 's/:/  /' | awk '{ print $2 }'`
+        for file in `ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$remote" "cd $remotedest; git xfer list -f"`; do
+            if [ ! -e "$file" ]; then
+                rsync -avz -e "ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress "$url/$file" "$file"
+                git xfer add "$file"
+            fi
+        done
+    else
+        echo 'cannot find remote -- try git remote add <remote> <url>'
+    fi
+
+}
+
+base=`git rev-parse --show-toplevel`
+cache=$base/.git/xfer/cache
+main "$@"

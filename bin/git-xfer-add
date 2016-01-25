@@ -16,12 +16,16 @@ usage() {
 # exec
 # ----
 add(){
-    if [ -e "$1" ]; then
-        shasum=`sha1sum "$1" | awk '{ print $1 }'`
-        fname=`echo "$1" | sed "s|$base|.|"`
-        if [ ! `grep "$fname  " $cache | wc -l` -gt 0 ]; then
-            echo "$shasum  $fname  local" >> "$cache"
-        fi
+    if [ ! -e "$1" ]; then
+        echo 'File to not found!'
+        exit 1
+    fi
+
+    shasum=`sha1sum "$1" | awk '{ print $1 }'`
+    fname=`echo "$1" | sed "s|$base|.|"`
+    if [ ! `grep "$fname  " $cache | wc -l` -gt 0 ]; then
+        echo "$shasum  $fname  local" >> "$cache"
+        echo "$fname" >> "$base/.gitignore"
     fi
 }
 

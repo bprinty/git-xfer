@@ -21,6 +21,9 @@ remove(){
     mv "$cache.lck" "$cache"
     grep -v "$fname" "$base/.gitignore" > "$base/.gitignore.lck"
     mv "$base/.gitignore.lck" "$base/.gitignore"
+    if [ -e "$1" ]; then
+        rm "$1"
+    fi
 }
 
 main() {

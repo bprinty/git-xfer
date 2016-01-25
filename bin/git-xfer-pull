@@ -28,28 +28,68 @@ main() {
             ;;
     esac
 
-    port="22"
     case "$1" in
         "-p"|"--port")
             port="$2";
             ;;
     esac
 
+    # verify remote
+    remote=`git remote -v | grep "$dest\s" | awk '{ print $2 }' | uniq | sed 's/\.git$//'`
+    if [ ! "$remote" ]; then
+        echo 'cannot find remote -- try git remote add <remote> <url>'
+    fi
+
+    # handle ssh url type
+    if [ `echo "$remote" | grep 'ssh://'` ]; then
+        urlstring=`echo "$remote" | sed 's|ssh://||' | sed 's|:|  |' | sed 's|/|  /|'`
+        url=`echo "$urlstring" | awk '{ print $1 }'`
+        if [ ! `echo "$urlstring" | awk '{ print $3 }'` ]; then
+            port="22"
+            repo=`echo "$urlstring" | awk '{ print $2 }'`
+        else
+            port=`echo "$urlstring" | awk '{ print $2 }'`
+            repo=`echo "$urlstring" | awk '{ print $3 }'`
+        fi
+
+    # don't allow operations to github (they have git-lfs)
+    elif [ `echo "$remote" | grep 'github.com'` ]; then
+        echo 'Syncing with GitHub is not supported!'
+        exit 1
+
+    # ssh specification without port
+    elif [ `echo "$remote" | grep '@' | grep ':'` ]; then
+        url=`echo "$remote" | sed 's|:|  |' | awk '{ print $1 }'`
+        port="22"
+        repo=`echo "$remote" | sed 's|:|  |' | awk '{ print $2 }'`
+    
+    # local repo
+    else
+        repo="$remote"
+    fi
+
+    # do the copying
     cd "$base"
-    url=`git remote -v | grep $dest | awk '{ print $2 }' | uniq | sed 's/\.git$//'`
-    if [ $url ]; then
-        remote=`echo "$url" | sed 's/:/  /' | awk '{ print $1 }'`
-        remotedest=`echo "$url" | sed 's/:/  /' | awk '{ print $2 }'`
-        for file in `ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$remote" "cd $remotedest; git xfer list -f"`; do
+    if [ -z $port ]; then
+        # local repo
+        for file in `cd "$repo" && git xfer list -f`; do
+            cd "$base"
             if [ ! -e "$file" ]; then
-                rsync -avz -e "ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress "$url/$file" "$file"
+                rsync -avz --progress "$repo/$file" "$file"
                 git xfer add "$file"
             fi
         done
     else
-        echo 'cannot find remote -- try git remote add <remote> <url>'
+        # remote repo
+        for file in `ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$url" "cd $repo; git xfer list -f"`; do
+            if [ ! -e "$file" ]; then
+                rsync -avz -e "ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress "$url:$repo/$file" "$file"
+                git xfer add "$file"
+            fi
+        done
     fi
 
+    exit 0
 }
 
 base=`git rev-parse --show-toplevel`

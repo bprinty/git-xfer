@@ -10,6 +10,8 @@
 BIN_DIR   = /usr/local/bin
 LOADER    = git-xfer
 COMMANDS  = git-xfer-push git-xfer-pull git-xfer-add git-xfer-remove git-xfer-list
+TESTS     = test-local
+# TESTS     = test-local test-remote
 
 
 # targets
@@ -29,4 +31,4 @@ uninstall:
 
 .PHONY: test
 test:
-	PATH=$$PATH:`pwd`/bin && for cmd in `ls ./test`; do sh ./test/$$cmd; done
+	PATH=`pwd`/bin:$$PATH && for cmd in $(TESTS); do sh ./test/$$cmd; done

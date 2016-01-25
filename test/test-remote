@@ -74,4 +74,7 @@ if [ `git xfer list | grep "test-remote-file" | wc -l` -ne 1 ]; then
     exit 1
 fi
 
+git xfer rm test-local-file
+git xfer rm test-remote-file
+
 clean

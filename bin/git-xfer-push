@@ -73,13 +73,21 @@ main() {
     for file in `grep -v ",$dest" "$cache" | awk '{ print $2 }'`; do
 		# copy locally
         if [ -z $port ]; then
-            rsync -avz --progress "$file" "$repo/$file"
+            if [ `which rsync` ]; then
+                rsync -avz --progress "$file" "$repo/$file"
+            else
+                cp "$file" "$repo/$file"
+            fi
             cd "$repo" && git xfer add "$file" && cd "$base"
         
         # copy over ssh
         else
-            rsync -avz -e "ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress "$file" "$url:$repo/$file"
-    		ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$url" "cd $repo; git xfer add \"$file\""
+            if [ `which rsync` ]; then
+                rsync -avz -e "ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress "$file" "$url:$repo/$file"
+            else
+                scp -P $port "$file" "$url:$repo/$file"
+            fi
+            ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$url" "cd $repo; git xfer add \"$file\""
         fi
 
         # update cache

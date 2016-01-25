@@ -7,7 +7,7 @@
 
 # config
 # ------
-BIN_DIR   = /usr/local/bin
+BIN_DIR   = /usr/bin
 LOADER    = git-xfer
 COMMANDS  = git-xfer-push git-xfer-pull git-xfer-add git-xfer-remove git-xfer-list
 TESTS     = test-local

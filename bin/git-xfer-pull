@@ -90,6 +90,7 @@ main() {
                 if [ `which rsync` ]; then
                     rsync -avz -e "ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress "$url:$repo/$file" "$file"
                 else
+                    mkdir -p `dirname "$file"`
                     scp -P $port "$url:$repo/$file" "$file"
                 fi
                 git xfer add "$file"

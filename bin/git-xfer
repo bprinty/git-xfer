@@ -41,12 +41,19 @@ main() {
             ;;
     esac
 
+    # set up git working directory
     local workingdir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
     if [ ! -e "$workingdir/git-xfer-$subcommand" ]; then
         usage; exit 1
     fi
 
+    # ensure user is inside git repository
     gitdir=`git rev-parse --show-toplevel`
+    if [ ! -e "$gitdir" ]; then
+        exit 1
+    fi
+
+    # create directory if not exists
     if [ ! -e "$gitdir/.git/xfer" ]; then
         mkdir "$gitdir/.git/xfer"
     fi

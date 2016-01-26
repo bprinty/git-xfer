@@ -75,6 +75,7 @@ main() {
         for file in `cd "$repo" && git xfer list -f`; do
             cd "$base"
             if [ ! -e "$file" ]; then
+                mkdir -p `dirname "$file"`
                 if [ `which rsync` ]; then
                     rsync -avz --progress "$repo/$file" "$file"
                 else
@@ -87,6 +88,7 @@ main() {
         # remote repo
         for file in `ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$url" "cd $repo; git xfer list -f"`; do
             if [ ! -e "$file" ]; then
+                mkdir -p `dirname "$file"`
                 if [ `which rsync` ]; then
                     rsync -avz -e "ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress "$url:$repo/$file" "$file"
                 else

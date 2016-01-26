@@ -73,6 +73,7 @@ main() {
     for file in `grep -v ",$dest" "$cache" | awk '{ print $2 }'`; do
 		# copy locally
         if [ -z $port ]; then
+            mkdir -p `dirname "$repo/$file"`
             if [ `which rsync` ]; then
                 rsync -avz --progress "$file" "$repo/$file"
             else
@@ -82,6 +83,7 @@ main() {
         
         # copy over ssh
         else
+            ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$url" "cd $repo; mkdir -p `dirname $file`"
             if [ `which rsync` ]; then
                 rsync -avz -e "ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress "$file" "$url:$repo/$file"
             else

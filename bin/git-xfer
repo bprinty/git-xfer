@@ -13,9 +13,11 @@ usage() {
     echo "usage: git xfer <subcommand>"
     echo
     echo "Available subcommands are:"
-    echo "add  <file>  Add file to be tracked by git xfer"
-    echo "push <name>  Push local files to remote"
-    echo "pull <name>  Pull files from remote server locally"
+    echo "add    <file>  Add file to be tracked by git-xfer"
+    echo "remove <file>  Remove file for tracking via git-xfer"
+    echo "rm     <file>  Remove file and remove tracking information for file"
+    echo "push   <name>  Push local files to remote"
+    echo "pull   <name>  Pull files from remote server locally"
 }
 
 version() {

@@ -1,0 +1,85 @@
+#!/usr/bin/env sh
+#
+# push functionality of git-xfer plugin
+# 
+# @author <bprinty@gmail.com>
+# ------------------------------------------------
+
+
+# meta
+# ----
+usage() {
+    echo "usage: git xfer sync [options] <remote> <branch>"
+}
+
+
+# exec
+# ----
+main() {
+    if [ "$#" -lt 2 ]; then
+        usage; exit 1
+    fi
+
+    case $1 in
+        "-h"|"--help")
+            usage; exit 0
+            ;;
+    esac
+
+    case "$1" in
+        "-p"|"--port")
+            port="$2";
+            ;;
+    esac
+
+    dest="$1"
+    branch="$2"
+
+    # verify remote
+    remote=`git remote -v | grep "$dest\s" | awk '{ print $2 }' | uniq | sed 's/\.git$//'`
+    if [ ! "$remote" ]; then
+        echo 'cannot find remote -- try git remote add <remote> <url>'
+    fi
+
+    # handle ssh url type
+    if [ `echo "$remote" | grep 'ssh://'` ]; then
+        urlstring=`echo "$remote" | sed 's|ssh://||' | sed 's|:|  |' | sed 's|/|  /|'`
+        url=`echo "$urlstring" | awk '{ print $1 }'`
+        if [ ! `echo "$urlstring" | awk '{ print $3 }'` ]; then
+            port="22"
+            repo=`echo "$urlstring" | awk '{ print $2 }'`
+        else
+            port=`echo "$urlstring" | awk '{ print $2 }'`
+            repo=`echo "$urlstring" | awk '{ print $3 }'`
+        fi
+
+    # don't allow operations to github (they have git-lfs)
+    elif [ `echo "$remote" | grep 'github.com'` ]; then
+        echo 'Syncing with GitHub is not supported!'
+        exit 1
+
+    # ssh specification without port
+    elif [ `echo "$remote" | grep '@' | grep ':'` ]; then
+        url=`echo "$remote" | sed 's|:|  |' | awk '{ print $1 }'`
+        port="22"
+        repo=`echo "$remote" | sed 's|:|  |' | awk '{ print $2 }'`
+    
+    # local repo
+    else
+        repo="$remote"
+    fi
+    
+    # local sync
+    if [ -z $port ]; then
+        cd "$repo"
+        git checkout "$branch"
+        git pull origin "$branch"
+    else
+        ssh -q -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$url" "cd $repo; git checkout $branch; git pull origin $branch"
+    fi
+
+}
+
+base=`git rev-parse --show-toplevel`
+cache="$base/.git/xfer/cache"
+main "$@"

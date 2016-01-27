@@ -25,6 +25,9 @@ fi
 # -----
 clean() {
     cd "$base/test"
+    if [ `git branch | grep 'testing' | wc -l` -eq 1 ]; then
+        git branch -d testing
+    fi
     rm -f test-local-file test-remote-file
     git remote remove testserver
     rm -rf "$testdir"
@@ -35,7 +38,23 @@ clean() {
 
 # testing
 # -------
+echo -n 'sync .......................... '
+cd "$testdir"/git-xfer/
+git branch testing
+git checkout testing
+cd "$base/test"
+git xfer sync testserver master
+cd "$testdir"/git-xfer/test
+if [ `git branch | grep '* master' | wc -l` -ne 1 ]; then
+    echo 'Sync failed!';
+    clean
+    exit 1
+fi
+echo 'ok'
+
 # push
+echo -n 'push .......................... '
+cd "$base/test"
 echo 'test' > test-local-file
 git xfer add test-local-file
 git xfer push testserver
@@ -58,6 +77,7 @@ if [ `git xfer list | grep "test-local-file" | grep "testserver" | wc -l` -ne 1 
 fi
 
 # pull
+echo -n 'pull .......................... '
 cd "$testdir/git-xfer/test"
 echo 'test' > test-remote-file
 git xfer add test-remote-file
@@ -74,7 +94,8 @@ if [ `git xfer list | grep "test-remote-file" | wc -l` -ne 1 ]; then
     exit 1
 fi
 
+echo -n 'clean ......................... '
 git xfer rm test-local-file
 git xfer rm test-remote-file
-
 clean
+echo 'ok'

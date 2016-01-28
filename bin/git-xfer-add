@@ -23,10 +23,12 @@ add(){
 
     shasum=`sha1sum "$1" | awk '{ print $1 }'`
     fname=`echo "$1" | sed "s|$base|.|"`
-    if [ ! `grep "$fname  " $cache | wc -l` -gt 0 ]; then
+    if [ ! `grep "$fname  " "$cache" | wc -l` -gt 0 ]; then
         echo "$shasum  $fname  local" >> "$cache"
-        echo "$fname" >> "$base/.gitignore"
-        git add "$base/.gitignore"
+        if [ ! `grep "$fname" "$base/.gitignore"` ]; then
+	    echo "$fname" >> "$base/.gitignore"
+            git add "$base/.gitignore"
+	fi
     fi
 }
 

@@ -13,6 +13,15 @@ git clone git@github.com:bprinty/git-xfer.git
 make install
 ```
 
+NOTE: Windows users that do not have Make installed will have to just copy executables to somewhere on their path:
+
+```bash
+# within git-bash for Windows
+git clone git@github.com:bprinty/git-xfer.git
+cd git-xfer
+cp bin/* /usr/bin/
+```
+
 
 ## Usage:
 

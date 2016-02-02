@@ -19,7 +19,8 @@ remove(){
     fname=`echo "$1" | sed "s|$base|.|"`
     grep -v "$fname  " "$cache" > "$cache.lck"
     mv "$cache.lck" "$cache"
-    grep -v "$fname" "$base/.gitignore" > "$base/.gitignore.lck"
+    ignorename=`echo "$fname" | sed "s|./||"`
+    grep -v "$ignorename" "$base/.gitignore" > "$base/.gitignore.lck"
     mv "$base/.gitignore.lck" "$base/.gitignore"
     if [ -e "$1" ]; then
         rm "$1"

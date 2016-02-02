@@ -26,7 +26,7 @@ add(){
     if [ ! `grep "$fname  " "$cache" | wc -l` -gt 0 ]; then
         echo "$shasum  $fname  local" >> "$cache"
         if [ ! `grep "$fname" "$base/.gitignore"` ]; then
-	    echo "$fname" >> "$base/.gitignore"
+	    echo "$fname" | sed "s|./||" >> "$base/.gitignore"
             git add "$base/.gitignore"
 	fi
     fi

@@ -17,19 +17,23 @@ usage() {
 # ----
 main() {
 
-    touch "$cache"
+    if [ -e "$cache" ]; then
+	cachedata=`cat "$cache"`
+    else
+	cachedata=""
+    fi
     case $1 in
         "-h"|"--help")
             usage; exit 0
             ;;
         "-v"|"--verbose")
-            cat "$cache"; exit 0
+            echo "$cachedata"; exit 0
             ;;
         "-f"|"--files")
-            cat "$cache" | awk '{ print $2 }'; exit 0
+            echo "$cachedata" | awk '{ print $2 }'; exit 0
             ;;
-    esac    
-    cat "$cache" | awk '{ print $2"\t\t"$3 }'
+    esac
+    echo "$cachedata" | awk '{ print $2"\t\t"$3 }'
 }
 
 base=`git rev-parse --show-toplevel`

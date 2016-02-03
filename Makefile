@@ -36,5 +36,4 @@ test:
 release:
 	PATH=`pwd`/bin:$$PATH && TAG=`git xfer -v` && git tag -d $$TAG || echo "local tag available"
 	PATH=`pwd`/bin:$$PATH && TAG=`git xfer -v` && git push origin :$$TAG || echo "remote tag available"
-	git push origin master
 	PATH=`pwd`/bin:$$PATH && TAG=`git xfer -v` && git tag $$TAG && git push origin $$TAG

@@ -81,7 +81,7 @@ main() {
                 else
                     cp "$repo/$file" "$file"
                 fi
-                git xfer add "$file"
+                git xfer add --no-ignore "$file"
             fi
         done
     else
@@ -95,7 +95,7 @@ main() {
                     mkdir -p `dirname "$file"`
                     scp -P $port "$url:$repo/$file" "$file"
                 fi
-                git xfer add "$file"
+                git xfer add --no-ignore "$file"
             fi
         done
     fi

@@ -25,10 +25,12 @@ add(){
     fname=`echo "$1" | sed "s|$base|.|"`
     if [ ! `grep "$fname  " "$cache" | wc -l` -gt 0 ]; then
         echo "$shasum  $fname  local" >> "$cache"
-        if [ ! `grep "$fname" "$base/.gitignore"` ]; then
-	    echo "$fname" | sed "s|./||" >> "$base/.gitignore"
-            git add "$base/.gitignore"
-	fi
+        if [ "$gitignore" = "TRUE" ]; then
+            if [ ! `grep "$fname" "$base/.gitignore"` ]; then
+                echo "$fname" | sed "s|./||" >> "$base/.gitignore"
+                git add "$base/.gitignore"
+    	   fi
+        fi
     fi
 }
 
@@ -37,9 +39,13 @@ main() {
         usage; exit 1
     fi
 
+    gitignore='TRUE'
     case "$1" in
         "-h"|"--help")
             usage; exit 0
+            ;;
+        "-n"|"--no-ignore")
+            gitignore='FALSE'; shift
             ;;
     esac
 

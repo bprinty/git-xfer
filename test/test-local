@@ -55,6 +55,18 @@ if [ `cat "$cache" | wc -l` -ne 2 ]; then
 fi
 echo 'ok'
 
+# add without gitignore
+echo 'test' > test-gitignore
+git xfer add --no-ignore test-gitignore
+echo -n 'add no-ignore ................. '
+if [ `cat "$base/.gitignore" | grep "test-ignore" | wc -l` -ne 0 ]; then
+    echo 'Fail! Error adding files without ignore.'
+    clean
+    exit 1
+fi
+git xfer rm test-gitignore
+echo 'ok'
+
 # list
 echo -n 'list .......................... '
 if [ `git xfer list | wc -l` -ne 2 ]; then

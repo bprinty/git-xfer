@@ -33,7 +33,7 @@ uninstall:
 test:
 	PATH=`pwd`/bin:$$PATH && for cmd in $(TESTS); do sh ./test/$$cmd; done
 
-release:
+release: test
 	PATH=`pwd`/bin:$$PATH && TAG=`git xfer -v` && git tag -d $$TAG || echo "local tag available"
 	PATH=`pwd`/bin:$$PATH && TAG=`git xfer -v` && git push origin :$$TAG || echo "remote tag available"
 	PATH=`pwd`/bin:$$PATH && TAG=`git xfer -v` && git tag $$TAG && git push origin $$TAG

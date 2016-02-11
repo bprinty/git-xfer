@@ -68,6 +68,14 @@ main() {
         repo="$remote"
     fi
 
+    # update remote
+    branch=`git branch | grep '* '| sed 's/\* //g'`
+    if [ `echo $branch | grep 'detached from' | wc -l` -ne 0 ]; then
+        echo 'git-xfer will not work on a detached branch!'
+        exit 1
+    fi
+    git xfer sync "$dest" "$branch"
+
     # do the copying
     cd "$base"
     for file in `grep -v ",$dest" "$cache" | awk '{ print $2 }'`; do

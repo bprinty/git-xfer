@@ -9,7 +9,11 @@
 # meta
 # ----
 usage() {
-    echo "usage: git xfer add <file>"
+    echo "usage: git xfer add [options] <file>"
+    echo ""
+    echo "Options:"
+    echo "  -h | --help              Show help and exit."
+    echo "  -n | --no-ignore         Do not update .gitignore with tracked files."
 }
 
 

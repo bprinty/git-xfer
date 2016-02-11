@@ -9,7 +9,10 @@
 # meta
 # ----
 usage() {
-    echo "usage: git xfer add <file>"
+    echo "usage: git xfer remove [options] <file>"
+    echo ""
+    echo "Options:"
+    echo "  -h | --help              Show help and exit."
 }
 
 

@@ -9,7 +9,10 @@
 # meta
 # ----
 usage() {
-    echo "usage: git xfer push <remote>"
+    echo "usage: git xfer push [options] <remote>"
+    echo ""
+    echo "Options:"
+    echo "  -h | --help              Show help and exit."
 }
 
 

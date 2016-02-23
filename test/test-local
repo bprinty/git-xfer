@@ -29,7 +29,10 @@ clean() {
     if [ `git branch | grep 'testing' | wc -l` -eq 1 ]; then
         git branch -d testing
     fi
-    rm -f test-local-file test-remote-file test-archive archive.zip
+    git xfer rm test-local-file
+    git xfer rm test-remote-file
+    git xfer rm test-archive
+    rm -f archive.zip
     git remote remove testserver
     rm -rf "$testdir"
     rm "$cache"
@@ -169,7 +172,5 @@ fi
 printf 'ok\n'
 
 printf 'clean ......................... '
-git xfer rm test-local-file
-git xfer rm test-remote-file
 clean
 printf 'ok\n'

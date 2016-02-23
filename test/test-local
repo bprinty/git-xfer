@@ -29,7 +29,7 @@ clean() {
     if [ `git branch | grep 'testing' | wc -l` -eq 1 ]; then
         git branch -d testing
     fi
-    rm -f test-local-file test-remote-file
+    rm -f test-local-file test-remote-file test-archive archive.zip
     git remote remove testserver
     rm -rf "$testdir"
     rm "$cache"
@@ -92,6 +92,18 @@ printf 'remove ........................ '
 git xfer remove test-local test-remote
 if [ `cat "$cache" | wc -l` -ne 0 ]; then
     echo 'Fail! Error removing files.'
+    clean
+    exit 1
+fi
+printf 'ok\n'
+
+# archive
+printf 'archive ....................... '
+echo 'test-archive' > test-archive
+git xfer add test-archive
+git xfer archive archive.zip
+if [ ! -e archive.zip ]; then
+    echo 'Fail! Archive does not exist.'
     clean
     exit 1
 fi

@@ -124,6 +124,20 @@ fi
 rm test-remove
 printf 'ok\n'
 
+# archive
+printf 'archive ....................... '
+echo 'test-archive' > test-archive
+git xfer add test-archive
+git xfer archive archive.zip
+if [ ! -e archive.zip ]; then
+    echo 'Fail! Archive does not exist.'
+    clean
+    exit 1
+fi
+git xfer rm test-archive
+rm archive.zip
+printf 'ok\n'
+
 # sync
 printf 'sync .......................... '
 cd "$testdir"/git-xfer/

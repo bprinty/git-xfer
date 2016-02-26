@@ -1,0 +1,71 @@
+#!/usr/bin/env sh
+#
+# push functionality of git-xfer plugin
+# 
+# @author <bprinty@gmail.com>
+# ------------------------------------------------
+
+
+# meta
+# ----
+usage() {
+    echo "usage: git xfer archive [options] <name>"
+    echo ""
+    echo "Options:"
+    echo "  -h | --help              Show help and exit."
+}
+
+
+# exec
+# ----
+main() {
+    if [ "$#" -lt 1 ]; then
+        usage; exit 1
+    fi
+
+    exclude="52dbb9dc-d40c-11e5-84fd-7831c1b99ad4"
+    case "$1" in
+        "-h"|"--help")
+            usage; exit 0
+            ;;
+        "-x"|"--exclude")
+            exclude="$2"; shift; shift
+            ;;
+    esac
+
+    archive="$1"
+    if [ ! "$archive" ]; then
+        usage; exit 1
+    fi
+
+
+    # clear archive for use
+    adir="$base/.git/xfer/archive"
+    rm -rf "$adir"
+    mkdir -p "$adir"
+
+    # add files to be archived
+    cwd=`pwd`
+    cd "$base"
+    for file in `cat "$cache" | grep -v ",$exclude" | awk '{ print $2 }'`; do
+        fdir="$adir"/`dirname $file`
+        mkdir -p "$fdir"
+        cp "$file" "$fdir/"
+    done
+
+    # archive and save to specified file
+    cd "$adir"
+    zip -r archive.zip *
+    cd "$cwd"
+    mv "$adir/archive.zip" "$archive"
+
+    # clean up
+    rm -rf "$adir"
+
+    exit 0
+
+}
+
+base=`git rev-parse --show-toplevel`
+cache="$base/.git/xfer/cache"
+main "$@"

@@ -30,7 +30,7 @@ add(){
     else
         shasum=`sha1sum "$1" | awk '{ print $1 }'`
     fi
-    fname=`echo "$1" | sed "s|$base|.|"`
+    fname=$(echo "$1" | sed "s|$base|.|" | sed 's/ /\\ /'g)
     if [ ! `grep "$fname  " "$cache" | wc -l` -gt 0 ]; then
         echo "$shasum  $fname  local" >> "$cache"
         if [ "$gitignore" = "TRUE" ]; then
@@ -60,9 +60,9 @@ main() {
     touch "$cache"
     for i in "$@"; do
         if [ "$i" = "." ]; then
-            fullpath=`pwd`
+            fullpath="`pwd`"
         else
-            fullpath=$(cd $(dirname "$i") && pwd -P)/$(basename "$i")
+            fullpath="$(cd $(dirname "$i") && pwd -P)/$(basename "$i")"
         fi
         if [ -d "$fullpath" ]; then
             for j in `find "$fullpath" -type f`; do

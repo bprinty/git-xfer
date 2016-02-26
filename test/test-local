@@ -16,11 +16,10 @@ rm "$cache"
 touch "$cache"
 rm -rf "$testdir"
 mkdir -p "$testdir"
-cp -r "$base" "$testdir/"
-if [ ! `git remote | grep "testserver"` ]; then
-    git remote set-url origin $base
-    git remote add testserver "$testdir/git-xfer"
-fi
+cd "$testdir/"
+git clone http://github.com/bprinty/git-xfer.git
+cd "$base/"
+git remote add testserver "$testdir/git-xfer"
 
 
 # funcs
@@ -56,19 +55,21 @@ fi
 git xfer rm test-add
 printf 'ok\n'
 
-# printf 'add with space ................ '
-# echo 'space' > "test space"
-# if [ `cat "$cache" | grep "test\ space" | wc -l` -ne 1 ]; then
-#     echo 'Fail! Error adding files.'
-#     clean
-#     exit 1
-# fi
-# if [ `cat "$cache" | wc -l` -ne 2 ]; then
-#     echo 'Fail! Error adding files.'
-#     clean
-#     exit 1
-# fi
-# printf 'ok\n'
+printf 'add with space ................ '
+echo 'test' > test\ add-withspace
+git xfer add test\ add-withspace
+if [ `cat "$cache" | grep "add-withspace" | wc -l` -ne 1 ]; then
+    echo 'Fail! Error adding files.'
+    clean
+    exit 1
+fi
+if [ `cat "$cache" | wc -l` -ne 1 ]; then
+    echo 'Fail! Error adding files.'
+    clean
+    exit 1
+fi
+git xfer rm test\ add-withspace
+printf 'ok\n'
 
 # add without gitignore
 echo 'test' > test-gitignore
@@ -126,12 +127,10 @@ printf 'ok\n'
 # sync
 printf 'sync .......................... '
 cd "$testdir"/git-xfer/
-pwd
 git branch testing
 git checkout testing
 cd "$base/test"
-pwd
-git xfer sync testserver master &>/dev/null
+git xfer sync testserver master
 cd "$testdir"/git-xfer/test
 if [ `git branch | grep '* master' | wc -l` -ne 1 ]; then
     echo 'Sync failed!';
@@ -140,51 +139,52 @@ if [ `git branch | grep '* master' | wc -l` -ne 1 ]; then
 fi
 printf 'ok\n'
 
-# # push
-# printf 'push .......................... '
-# cd "$base/test"
-# echo 'test' > test-local-file
-# git xfer add test-local-file
-# git xfer push testserver 2>&1 1>/dev/null
-# cd "$testdir"/git-xfer/test
-# if [ ! -e "test-local-file" ]; then
-#     echo "Fail! Cannot push files to remote."
-#     clean
-#     exit 1
-# fi
-# if [ `git xfer list | grep "test-local-file" | wc -l` -ne 1 ]; then
-#     echo "Fail! Remote not synced."
-#     clean
-#     exit 1
-# fi
-# cd "$base/test"
-# if [ `git xfer list | grep "test-local-file" | grep "testserver" | wc -l` -ne 1 ]; then
-#     echo "Fail! Local not synced with transfer status."
-#     clean
-#     exit 1
-# fi
-# git xfer rm test-local-file
-# printf 'ok\n'
+# push
+printf 'push .......................... '
+cd "$base/test"
+echo 'test' > test-local-file
+git xfer add test-local-file
+git xfer push testserver 2>&1 1>/dev/null
+cd "$testdir"/git-xfer/test
+if [ ! -e "test-local-file" ]; then
+    echo "Fail! Cannot push files to remote."
+    clean
+    exit 1
+fi
+if [ `git xfer list | grep "test-local-file" | wc -l` -ne 1 ]; then
+    echo "Fail! Remote not synced."
+    clean
+    exit 1
+fi
+git xfer rm test-local-file
+cd "$base/test"
+if [ `git xfer list | grep "test-local-file" | grep "testserver" | wc -l` -ne 1 ]; then
+    echo "Fail! Local not synced with transfer status."
+    clean
+    exit 1
+fi
+git xfer rm test-local-file
+printf 'ok\n'
 
-# # pull
-# echo 'pull .......................... '
-# cd "$testdir/git-xfer/test"
-# echo 'test' > test-remote-file
-# git xfer add test-remote-file
-# cd "$base/test"
-# git xfer pull testserver
-# if [ ! -e "test-remote-file" ]; then
-#     echo "Fail! Cannot pull remote files."
-#     clean
-#     exit 1
-# fi
-# if [ `git xfer list | grep "test-remote-file" | wc -l` -ne 1 ]; then
-#     echo "Fail! Local not synced."
-#     clean
-#     exit 1
-# fi
-# git xfer rm test-remote-file
-# printf 'ok\n'
+# pull
+echo 'pull .......................... '
+cd "$testdir/git-xfer/test"
+echo 'test' > test-remote-file
+git xfer add test-remote-file
+cd "$base/test"
+git xfer pull testserver
+if [ ! -e "test-remote-file" ]; then
+    echo "Fail! Cannot pull remote files."
+    clean
+    exit 1
+fi
+if [ `git xfer list | grep "test-remote-file" | wc -l` -ne 1 ]; then
+    echo "Fail! Local not synced."
+    clean
+    exit 1
+fi
+git xfer rm test-remote-file
+printf 'ok\n'
 
 printf 'clean ......................... '
 clean

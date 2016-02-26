@@ -19,11 +19,14 @@ usage() {
 # exec
 # ----
 remove(){
-    fname=`echo "$1" | sed "s|$base|.|"`
-    grep -v "$fname  " "$cache" > "$cache.lck"
+    fname=$(echo "$1" | sed "s|$base|.|" | sed 's/ /\\ /'g)
+    if [ $delete ]; then
+        rm "$1"
+    fi
+    fgrep -v "$fname  " "$cache" > "$cache.lck"
     mv "$cache.lck" "$cache"
     ignorename=`echo "$fname" | sed "s|./||"`
-    grep -v "$ignorename" "$base/.gitignore" > "$base/.gitignore.lck"
+    fgrep -v "$ignorename" "$base/.gitignore" > "$base/.gitignore.lck"
     mv "$base/.gitignore.lck" "$base/.gitignore"
     git add "$base/.gitignore"
 }
@@ -36,6 +39,9 @@ main() {
     case "$1" in
         "-h"|"--help")
             usage; exit 0
+            ;;
+        "-d"|"")
+            delete="TRUE" && shift
             ;;
     esac
 

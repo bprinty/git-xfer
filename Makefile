@@ -17,7 +17,7 @@ TESTS     = test-local
 # targets
 # -------
 all:
-    @echo "usage: make [install|uninstall|test]"
+    @echo "usage: make [test|install|uninstall]"
 
 install:
 	install -d -m 0755 $(BIN_DIR)

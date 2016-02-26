@@ -18,6 +18,7 @@ rm -rf "$testdir"
 mkdir -p "$testdir"
 cp -r "$base" "$testdir/"
 if [ ! `git remote | grep "testserver"` ]; then
+    git remote set-url origin $base
     git remote add testserver "$testdir/git-xfer"
 fi
 
@@ -29,7 +30,6 @@ clean() {
     if [ `git branch | grep 'testing' | wc -l` -eq 1 ]; then
         git branch -d testing
     fi
-    rm -f test-local-file test-remote-file
     git remote remove testserver
     rm -rf "$testdir"
     rm "$cache"
@@ -40,30 +40,41 @@ clean() {
 # testing
 # -------
 # add
-git xfer add test-local test-remote
-if [ `uname` = "Darwin" ]; then
-    shasum=`shasum test-local | awk '{ print $1 }'`
-else
-    shasum=`sha1sum test-local | awk '{ print $1 }'`
-fi
 printf 'add ........................... '
+echo 'add file' > test-add
+git xfer add test-add
+if [ `uname` = "Darwin" ]; then
+    shasum=`shasum test-add | awk '{ print $1 }'`
+else
+    shasum=`sha1sum test-add | awk '{ print $1 }'`
+fi
 if [ `cat "$cache" | grep "$shasum" | wc -l` -ne 1 ]; then
     echo 'Fail! Error adding files.'
     clean
     exit 1
 fi
-if [ `cat "$cache" | wc -l` -ne 2 ]; then
-    echo 'Fail! Error adding files.'
-    clean
-    exit 1
-fi
+git xfer rm test-add
 printf 'ok\n'
+
+# printf 'add with space ................ '
+# echo 'space' > "test space"
+# if [ `cat "$cache" | grep "test\ space" | wc -l` -ne 1 ]; then
+#     echo 'Fail! Error adding files.'
+#     clean
+#     exit 1
+# fi
+# if [ `cat "$cache" | wc -l` -ne 2 ]; then
+#     echo 'Fail! Error adding files.'
+#     clean
+#     exit 1
+# fi
+# printf 'ok\n'
 
 # add without gitignore
 echo 'test' > test-gitignore
 git xfer add --no-ignore test-gitignore
 printf 'add no-ignore ................. '
-if [ `cat "$base/.gitignore" | grep "test-ignore" | wc -l` -ne 0 ]; then
+if [ `cat "$base/.gitignore" | grep "test-gtignore" | wc -l` -ne 0 ]; then
     echo 'Fail! Error adding files without ignore.'
     clean
     exit 1
@@ -73,11 +84,14 @@ printf 'ok\n'
 
 # list
 printf 'list .......................... '
-if [ `git xfer list | wc -l` -ne 2 ]; then
+echo 'test' > test-list
+git xfer add test-list
+if [ `git xfer list | wc -l` -ne 1 ]; then
     echo 'Fail! Error listing files.'
     exit 1
 fi
 git xfer list -v > "$cache.tst"
+diff "$cache.tst" "$cache"
 if [ `diff "$cache.tst" "$cache" | wc -l` -ne 0 ]; then
     echo 'Fail! Error listing verbose.'
     rm "$cache.tst"
@@ -85,25 +99,39 @@ if [ `diff "$cache.tst" "$cache" | wc -l` -ne 0 ]; then
     exit 1
 fi
 rm "$cache.tst"
+git xfer rm test-list
 printf 'ok\n'
 
 # remove
 printf 'remove ........................ '
-git xfer remove test-local test-remote
+echo 'test' > test-remove
+git xfer add test-remove
+if [ `cat "$cache" | wc -l` -ne 1 ]; then
+    echo 'Fail! Error adding files.'
+    clean
+    exit 1
+fi
+git xfer remove test-remove
 if [ `cat "$cache" | wc -l` -ne 0 ]; then
     echo 'Fail! Error removing files.'
     clean
     exit 1
 fi
+if [ ! -e test-remove ]; then
+    echo 'Fail! File removed.'
+fi
+rm test-remove
 printf 'ok\n'
 
 # sync
 printf 'sync .......................... '
 cd "$testdir"/git-xfer/
+pwd
 git branch testing
 git checkout testing
 cd "$base/test"
-git xfer sync testserver master
+pwd
+git xfer sync testserver master &>/dev/null
 cd "$testdir"/git-xfer/test
 if [ `git branch | grep '* master' | wc -l` -ne 1 ]; then
     echo 'Sync failed!';
@@ -112,52 +140,52 @@ if [ `git branch | grep '* master' | wc -l` -ne 1 ]; then
 fi
 printf 'ok\n'
 
-# push
-printf 'push .......................... '
-cd "$base/test"
-echo 'test' > test-local-file
-git xfer add test-local-file
-git xfer push testserver 2>&1 1>/dev/null
-cd "$testdir"/git-xfer/test
-if [ ! -e "test-local-file" ]; then
-    echo "Fail! Cannot push files to remote."
-    clean
-    exit 1
-fi
-if [ `git xfer list | grep "test-local-file" | wc -l` -ne 1 ]; then
-    echo "Fail! Remote not synced."
-    clean
-    exit 1
-fi
-cd "$base/test"
-if [ `git xfer list | grep "test-local-file" | grep "testserver" | wc -l` -ne 1 ]; then
-    echo "Fail! Local not synced with transfer status."
-    clean
-    exit 1
-fi
-printf 'ok\n'
+# # push
+# printf 'push .......................... '
+# cd "$base/test"
+# echo 'test' > test-local-file
+# git xfer add test-local-file
+# git xfer push testserver 2>&1 1>/dev/null
+# cd "$testdir"/git-xfer/test
+# if [ ! -e "test-local-file" ]; then
+#     echo "Fail! Cannot push files to remote."
+#     clean
+#     exit 1
+# fi
+# if [ `git xfer list | grep "test-local-file" | wc -l` -ne 1 ]; then
+#     echo "Fail! Remote not synced."
+#     clean
+#     exit 1
+# fi
+# cd "$base/test"
+# if [ `git xfer list | grep "test-local-file" | grep "testserver" | wc -l` -ne 1 ]; then
+#     echo "Fail! Local not synced with transfer status."
+#     clean
+#     exit 1
+# fi
+# git xfer rm test-local-file
+# printf 'ok\n'
 
-# pull
-echo 'pull .......................... '
-cd "$testdir/git-xfer/test"
-echo 'test' > test-remote-file
-git xfer add test-remote-file
-cd "$base/test"
-git xfer pull testserver
-if [ ! -e "test-remote-file" ]; then
-    echo "Fail! Cannot pull remote files."
-    clean
-    exit 1
-fi
-if [ `git xfer list | grep "test-remote-file" | wc -l` -ne 1 ]; then
-    echo "Fail! Local not synced."
-    clean
-    exit 1
-fi
-printf 'ok\n'
+# # pull
+# echo 'pull .......................... '
+# cd "$testdir/git-xfer/test"
+# echo 'test' > test-remote-file
+# git xfer add test-remote-file
+# cd "$base/test"
+# git xfer pull testserver
+# if [ ! -e "test-remote-file" ]; then
+#     echo "Fail! Cannot pull remote files."
+#     clean
+#     exit 1
+# fi
+# if [ `git xfer list | grep "test-remote-file" | wc -l` -ne 1 ]; then
+#     echo "Fail! Local not synced."
+#     clean
+#     exit 1
+# fi
+# git xfer rm test-remote-file
+# printf 'ok\n'
 
 printf 'clean ......................... '
-git xfer rm test-local-file
-git xfer rm test-remote-file
 clean
 printf 'ok\n'

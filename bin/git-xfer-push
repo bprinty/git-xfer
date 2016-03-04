@@ -35,7 +35,7 @@ main() {
     local dest="$1"
 
     # verify remote
-    remote=`git remote -v | grep "$dest\s" | awk '{ print $2 }' | uniq | sed 's/\.git$//'`
+    remote=`git remote -v | grep "$dest" | awk '{ print $2 }' | uniq | sed 's/\.git$//'`
     if [ ! "$remote" ]; then
         echo 'cannot find remote -- try git remote add <remote> <url>'
     fi

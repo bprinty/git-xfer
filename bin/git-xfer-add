@@ -20,11 +20,6 @@ usage() {
 # exec
 # ----
 add(){
-    if [ ! -e "$1" ]; then
-        echo 'File to not found!'
-        exit 1
-    fi
-
     if [ `uname` = "Darwin" ]; then
         shasum=`shasum "$1" | awk '{ print $1 }'`
     else
@@ -62,12 +57,10 @@ main() {
         if [ "$i" = "." ]; then
             fullpath="`pwd`"
         else
-            fullpath="$(cd $(dirname "$i") && pwd -P)/$(basename "$i")"
+            fullpath=$(cd "$(dirname "$i")" && pwd -P)/$(basename "$i")
         fi
         if [ -d "$fullpath" ]; then
-            for j in `find "$fullpath" -type f`; do
-                add "$j"
-            done
+            find "$fullpath" -type f -exec git xfer add {} \;
         else
             add "$fullpath"
         fi

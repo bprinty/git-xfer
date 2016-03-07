@@ -38,7 +38,7 @@ main() {
             echo "$cachedata" | awk '{ print $2 }'; exit 0
             ;;
     esac
-    echo "$cachedata" | awk '{ print $2"\t\t"$3 }'
+    echo "$cachedata" | awk '{ print $2" "$3" "$4 }'
 }
 
 base=`git rev-parse --show-toplevel`

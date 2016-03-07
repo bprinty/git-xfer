@@ -19,10 +19,10 @@ usage() {
 # exec
 # ----
 remove(){
-    fname=$(echo "$1" | sed "s|$base|.|" | sed 's/ /\\ /'g)
     if [ $delete ]; then
         rm "$1"
     fi
+    fname=$(echo "$1" | sed "s|$base|.|" | sed 's/ /\\ /'g)
     fgrep -v "$fname  " "$cache" > "$cache.lck"
     mv "$cache.lck" "$cache"
     ignorename=`echo "$fname" | sed "s|./||"`
@@ -50,12 +50,14 @@ main() {
         if [ "$i" = "." ]; then
             fullpath=`pwd`
         else
-            fullpath=$(cd $(dirname "$i") && pwd -P)/$(basename "$i")
+            fullpath=$(cd "$(dirname "$i")" && pwd -P)/$(basename "$i")
         fi
         if [ -d "$fullpath" ]; then
-            for j in `find "$fullpath" -type f`; do
-                remove "$j"
-            done
+            if [ $delete ]; then
+                find "$fullpath" -type f -exec git xfer rm {} \;
+            else
+                find "$fullpath" -type f -exec git xfer remove {} \;
+            fi
         else
             remove "$fullpath"
         fi

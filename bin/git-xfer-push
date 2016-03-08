@@ -91,13 +91,13 @@ main() {
         
         # copy over ssh
         else
-            ssh -q -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$url" "cd $repo; mkdir -p `dirname $file`"
+            ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; mkdir -p `dirname $file`"
             if [ `which rsync` ]; then
-                rsync -avz -e "ssh -q -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress "$file" "$url:$repo/$file"
+                rsync -avz -e "ssh -q -p $port -o StrictHostKeyChecking=no" --progress "$file" "$url:$repo/$file"
             else
                 scp -P $port "$file" "$url:$repo/$file"
             fi
-            ssh -q -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$url" "cd $repo; git xfer add \"$file\"" 2>&1 1>/dev/null
+            ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git xfer add \"$file\"" 2>&1 1>/dev/null
         fi
 
         # update cache

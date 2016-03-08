@@ -86,11 +86,11 @@ main() {
         done
     else
         # remote repo
-        for file in `ssh -q -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$url" "cd $repo; git xfer list -f"`; do
+        for file in `ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git xfer list -f"`; do
             if [ ! -e "$file" ]; then
                 mkdir -p `dirname "$file"`
                 if [ `which rsync` ]; then
-                    rsync -avz -e "ssh -q -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress "$url:$repo/$file" "$file"
+                    rsync -avz -e "ssh -q -p $port -o StrictHostKeyChecking=no " --progress "$url:$repo/$file" "$file"
                 else
                     mkdir -p `dirname "$file"`
                     scp -P $port "$url:$repo/$file" "$file"

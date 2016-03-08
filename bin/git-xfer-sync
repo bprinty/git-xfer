@@ -75,7 +75,7 @@ main() {
         git checkout "$branch"
         git pull origin "$branch"
     else
-        ssh -q -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$url" "cd $repo; git checkout $branch; git pull origin $branch"
+        ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git checkout $branch; git pull origin $branch"
     fi
 
 }

@@ -39,21 +39,21 @@ clean() {
 # testing
 # -------
 # add
-# printf 'add ........................... '
-# echo 'add file' > test-add
-# git xfer add test-add
-# if [ `uname` = "Darwin" ]; then
-#     shasum=`shasum test-add | awk '{ print $1 }'`
-# else
-#     shasum=`sha1sum test-add | awk '{ print $1 }'`
-# fi
-# if [ `cat "$cache" | grep "$shasum" | wc -l` -ne 1 ]; then
-#     echo 'Fail! Error adding files.'
-#     clean
-#     exit 1
-# fi
-# git xfer rm test-add
-# printf 'ok\n'
+printf 'add ........................... '
+echo 'add file' > test-add
+git xfer add test-add
+if [ `uname` = "Darwin" ]; then
+    shasum=`shasum test-add | awk '{ print $1 }'`
+else
+    shasum=`sha1sum test-add | awk '{ print $1 }'`
+fi
+if [ `cat "$cache" | grep "$shasum" | wc -l` -ne 1 ]; then
+    echo 'Fail! Error adding files.'
+    clean
+    exit 1
+fi
+git xfer rm test-add
+printf 'ok\n'
 
 printf 'add with space ................ '
 echo 'test' > test\ add-withspace

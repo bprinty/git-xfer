@@ -35,10 +35,10 @@ main() {
             echo "$cachedata"; exit 0
             ;;
         "-f"|"--files")
-            echo "$cachedata" | awk '{ print $2 }'; exit 0
+            echo "$cachedata" | sed 's/.*\.\//.\//g' | sed 's/  local.*//g'; exit 0
             ;;
     esac
-    echo "$cachedata" | awk '{ print $2" "$3" "$4 }'
+    echo "$cachedata" | sed 's/.*\.\//.\//g'
 }
 
 base=`git rev-parse --show-toplevel`

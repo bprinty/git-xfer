@@ -70,10 +70,13 @@ main() {
 
     # do the copying
     cd "$base"
+    OLDIFS=$IFS;
+    IFS=$'\n'
     if [ -z $port ]; then
         # local repo
         for file in `cd "$repo" && git xfer list -f`; do
             cd "$base"
+            file=`echo "$file" | sed 's/\\\ / /g'`
             if [ ! -e "$file" ]; then
                 mkdir -p `dirname "$file"`
                 if [ `which rsync` ]; then
@@ -81,12 +84,13 @@ main() {
                 else
                     cp "$repo/$file" "$file"
                 fi
-                git xfer add --no-ignore "$file"
             fi
+            git xfer add --no-ignore "$file"
         done
     else
         # remote repo
         for file in `ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git xfer list -f"`; do
+            file=`echo "$file" | sed 's/\\\ / /g'`
             if [ ! -e "$file" ]; then
                 mkdir -p `dirname "$file"`
                 if [ `which rsync` ]; then
@@ -95,10 +99,11 @@ main() {
                     mkdir -p `dirname "$file"`
                     scp -P $port "$url:$repo/$file" "$file"
                 fi
-                git xfer add --no-ignore "$file"
             fi
+            git xfer add --no-ignore "$file"
         done
     fi
+    IFS=$OLDIFS
 
     exit 0
 }

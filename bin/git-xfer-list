@@ -31,14 +31,11 @@ main() {
         "-h"|"--help")
             usage; exit 0
             ;;
-        "-v"|"--verbose")
-            echo "$cachedata"; exit 0
-            ;;
         "-f"|"--files")
             echo "$cachedata" | sed 's/.*\.\//.\//g' | sed 's/  local.*//g'; exit 0
             ;;
     esac
-    echo "$cachedata" | sed 's/.*\.\//.\//g'
+    echo "$cachedata"
 }
 
 base=`git rev-parse --show-toplevel`

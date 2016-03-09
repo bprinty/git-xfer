@@ -19,11 +19,16 @@ usage() {
 # exec
 # ----
 remove(){
+    if [ `uname` = "Darwin" ]; then
+        shasum=`shasum "$1" | awk '{ print $1 }'`
+    else
+        shasum=`sha1sum "$1" | awk '{ print $1 }'`
+    fi
     if [ $delete ]; then
         rm "$1"
     fi
     fname=$(echo "$1" | sed "s|$base|.|" | sed 's/ /\\ /'g)
-    fgrep -v "$fname  " "$cache" > "$cache.lck"
+    fgrep -v "$shasum" "$cache" > "$cache.lck"
     mv "$cache.lck" "$cache"
     ignorename=`echo "$fname" | sed "s|./||"`
     fgrep -v "$ignorename" "$base/.gitignore" > "$base/.gitignore.lck"

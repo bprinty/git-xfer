@@ -79,35 +79,21 @@ main() {
     # do the copying
     cd "$base"
     OLDIFS=$IFS;
-    IFS=$'\n'
+    IFS="$(printf '\n\t')"
     for file in `git xfer list -f`; do
         file=`echo "$file" | sed 's/\\\ / /g'`
         if [ -z $port ]; then
             # copy locally
             mkdir -p `dirname "$repo/$file"`
-            if [ `which rsync` ]; then
-                ls "$file"
-                rsync -avz --progress "$file" "$repo/$file"
-            else
-                cp "$file" "$repo/$file"
-            fi
-            cd "$repo" && git xfer add --no-ignore $file && cd "$base"
+            cp "$file" "$repo/$file"
+            cd "$repo" && git xfer add --no-ignore "$file" && cd "$base"
         else
             # copy over ssh
-            ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; mkdir -p `dirname $file`"
-            if [ `which rsync` ]; then
-                rsync -avz -e "ssh -q -p $port -o StrictHostKeyChecking=no" --progress "$file" "$url:$repo/$file"
-            else
-                scp -P $port "$file" "$url:$repo/$file"
-            fi
-            ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git xfer add --no-ignore $file" 2>&1 1>/dev/null
+            sshfile=`echo "$file" | sed 's/ /\\\ /g'`
+            ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; mkdir -p `dirname $sshfile`;"
+            scp -P $port "$file" $url:"$repo/$sshfile"
+            ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git xfer add --no-ignore $sshfile" 2>&1 1>/dev/null
         fi
-
-        # update cache
-        file=`echo "$file" | sed 's/ /\\\ /g'`
-        grep -v "$file  " "$cache" > "$cache.lck"
-        echo `grep "$file  " "$cache" | sed "s|,$dest||"`,$dest >> "$cache.lck"
-        mv "$cache.lck" "$cache"
     done
     IFS=$OLDIFS
     exit 0

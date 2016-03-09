@@ -55,11 +55,24 @@ echo 'ok'
 # push
 echo -n 'push .......................... '
 cd "$base/test"
+mkdir -p space\ test
 echo 'test' > test-local-file
-git xfer add test-local-file
+echo 'test' > test-file\ withspace
+echo 'test' > space\ test/test-file
+git xfer add test-local-file test-file\ withspace space\ test/test-file
 git xfer push testserver
 cd "$testdir"/git-xfer/test
 if [ ! -e "test-local-file" ]; then
+    echo "Fail! Cannot push files to remote."
+    clean
+    exit 1
+fi
+if [ ! -e "test-file withspace" ]; then
+    echo "Fail! Cannot push files to remote."
+    clean
+    exit 1
+fi
+if [ ! -e "space test/test-file" ]; then
     echo "Fail! Cannot push files to remote."
     clean
     exit 1
@@ -69,22 +82,44 @@ if [ `git xfer list | grep "test-local-file" | wc -l` -ne 1 ]; then
     clean
     exit 1
 fi
-cd "$base/test"
-if [ `git xfer list | grep "test-local-file" | grep "testserver" | wc -l` -ne 1 ]; then
-    echo "Fail! Local not synced with transfer status."
+if [ `git xfer list | grep "withspace" | wc -l` -ne 1 ]; then
+    echo "Fail! Remote not synced."
     clean
     exit 1
 fi
+if [ `git xfer list | grep "space.*test-file" | wc -l` -ne 1 ]; then
+    echo "Fail! Remote not synced."
+    clean
+    exit 1
+fi
+git xfer rm test-local-file test-file\ withspace space\ test/test-file
+cd "$base/test"
+git xfer rm test-local-file test-file\ withspace space\ test/test-file
+rm -rf space\ test
+printf 'ok\n'
 
 # pull
-echo -n 'pull .......................... '
+echo 'pull .......................... '
 cd "$testdir/git-xfer/test"
+mkdir -p space\ test
 echo 'test' > test-remote-file
-git xfer add test-remote-file
+echo 'test' > test-file\ withspace
+echo 'test' > space\ test/test-file
+git xfer add test-remote-file test-file\ withspace space\ test/test-file
 cd "$base/test"
 git xfer pull testserver
 if [ ! -e "test-remote-file" ]; then
-    echo "Fail! Cannot pull remote files."
+    echo "Fail! Cannot push files to remote."
+    clean
+    exit 1
+fi
+if [ ! -e "test-file withspace" ]; then
+    echo "Fail! Cannot push files to remote."
+    clean
+    exit 1
+fi
+if [ ! -e "space test/test-file" ]; then
+    echo "Fail! Cannot push files to remote."
     clean
     exit 1
 fi
@@ -93,9 +128,20 @@ if [ `git xfer list | grep "test-remote-file" | wc -l` -ne 1 ]; then
     clean
     exit 1
 fi
+if [ `git xfer list | grep "withspace" | wc -l` -ne 1 ]; then
+    echo "Fail! Local not synced."
+    clean
+    exit 1
+fi
+if [ `git xfer list | grep "space.*test-file" | wc -l` -ne 1 ]; then
+    echo "Fail! Local not synced."
+    clean
+    exit 1
+fi
+git xfer rm test-remote-file test-file\ withspace space\ test/test-file
+rm -rf space\ test
+printf 'ok\n'
 
 echo -n 'clean ......................... '
-git xfer rm test-local-file
-git xfer rm test-remote-file
 clean
 echo 'ok'

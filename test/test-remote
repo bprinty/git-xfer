@@ -29,7 +29,7 @@ clean() {
         git branch -d testing
     fi
     rm -f test-local-file test-remote-file
-    git remote remove testserver
+    git remote rm testserver
     rm -rf "$testdir"
     rm "$cache"
     touch "$cache"

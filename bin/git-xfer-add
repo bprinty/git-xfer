@@ -62,7 +62,7 @@ main() {
             fullpath=$(cd "$(dirname $i)" && pwd -P)/$(basename "$i")
         fi
         if [ -d "$fullpath" ]; then
-            find "$fullpath" -type f -exec git xfer add "{}" \;
+            find "$fullpath" -type f -exec git xfer add {} \;
         else
             add "$fullpath"
         fi

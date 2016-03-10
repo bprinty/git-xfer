@@ -9,11 +9,10 @@
 # meta
 # ----
 usage() {
-    echo "usage: git xfer list [options]"
+    echo "usage: git xfer list [options] [<remote>]"
     echo ""
     echo "Options:"
     echo "  -h | --help              Show help and exit."
-    echo "  -v | --verbose           Show verbose output for cache."
     echo "  -f | --files             Show only files."
 }
 

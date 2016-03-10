@@ -19,6 +19,8 @@ usage() {
     echo "  push      Push local files to remote"
     echo "  pull      Pull files from remote server locally"
     echo "  sync      Sync remote branch"
+    echo "  list      List locally tracked files or remote tracked files"
+    echo "  diff      List differences between local and remote"
     echo
 }
 

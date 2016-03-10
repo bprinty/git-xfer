@@ -67,6 +67,7 @@ main() {
     else
         repo="$remote"
     fi
+    git xfer sync "$dest" "$branch"
 
     # do the copying
     cd "$base"
@@ -74,7 +75,7 @@ main() {
     IFS="$(printf '\n\t')"
     if [ -z $port ]; then
         # local repo
-        for file in `cd "$repo" && git xfer list -f`; do
+        for file in `git xfer diff $dest | grep '>' | sed 's/> .*  //g'`; do
             file=`echo "$file" | sed 's/\\\ /\ /g'`
             if [ ! -e "$file" ]; then
                 mkdir -p `dirname "$file"`
@@ -84,7 +85,7 @@ main() {
         done
     else
         # remote repo
-        for file in `ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git xfer list -f"`; do
+        for file in `git xfer diff $dest | grep '>' | sed 's/> .*  //g'`; do
             file=`echo "$file" | sed 's/\\\ / /g'`
             sshfile=`echo "$file" | sed 's/ /\\\ /g'`
             if [ ! -e "$file" ]; then

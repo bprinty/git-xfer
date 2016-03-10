@@ -28,7 +28,7 @@ remove(){
         rm "$1"
     fi
     fname=$(echo "$1" | sed "s|$base|.|" | sed 's/ /\\ /'g)
-    fgrep -v "$shasum" "$cache" > "$cache.lck"
+    grep -v "$shasum" "$cache" > "$cache.lck"
     mv "$cache.lck" "$cache"
     ignorename=`echo "$fname" | sed "s|./||"`
     fgrep -v "$ignorename" "$base/.gitignore" > "$base/.gitignore.lck"

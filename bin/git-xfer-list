@@ -22,20 +22,26 @@ usage() {
 # ----
 main() {
 
-    if [ -e "$cache" ]; then
-	cachedata=`cat "$cache"`
-    else
-	cachedata=""
-    fi
+    local FILES="FALSE"
+
     case $1 in
         "-h"|"--help")
             usage; exit 0
             ;;
         "-f"|"--files")
-            echo "$cachedata" | sed 's/.*\.\//.\//g' | sed 's/  local.*//g'; exit 0
+            FILES="TRUE"; shift
             ;;
     esac
-    echo "$cachedata"
+
+    if [ ! -z $1 ]; then
+        cache="$cache-$1"
+    fi
+
+    if [ "$FILES" = "TRUE" ]; then
+        cat "$cache" | sed 's/.*\.\//.\//g' | sed 's/  local.*//g'
+    else
+        cat "$cache"
+    fi
 }
 
 base=`git rev-parse --show-toplevel`

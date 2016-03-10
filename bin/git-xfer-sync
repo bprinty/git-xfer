@@ -70,11 +70,14 @@ main() {
     fi
     
     # local sync
+    remotecache="$base/.git/xfer/cache-$dest"
     if [ -z $port ]; then
         cd "$repo"
         git checkout "$branch"
         git pull origin "$branch"
+        git xfer list > "$remotecache"
     else
+        ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git xfer list;" > "$remotecache"
         ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git checkout $branch; git pull origin $branch"
     fi
 

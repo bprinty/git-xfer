@@ -80,7 +80,7 @@ main() {
     cd "$base"
     OLDIFS=$IFS;
     IFS="$(printf '\n\t')"
-    for file in `git xfer list -f`; do
+    for file in `git xfer diff $dest | grep '<' | sed 's/< .*  //g'`; do
         file=`echo "$file" | sed 's/\\\ / /g'`
         if [ -z $port ]; then
             # copy locally

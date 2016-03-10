@@ -20,6 +20,7 @@ cd "$testdir/"
 git clone http://github.com/bprinty/git-xfer.git
 cd "$base/"
 git remote add testserver "$testdir/git-xfer"
+git xfer --reset
 
 
 # funcs
@@ -35,12 +36,18 @@ clean() {
     touch "$cache"
 }
 
+create() {
+    dir=`dirname "$1"`
+    mkdir -p "$dir"
+    echo "$1" > "$1"
+}
+
 
 # testing
 # -------
 # add
 printf 'add ........................... '
-echo 'add file' > test-add
+create test-add
 git xfer add test-add
 if [ `uname` = "Darwin" ]; then
     shasum=`shasum test-add | awk '{ print $1 }'`
@@ -56,7 +63,7 @@ git xfer rm test-add
 printf 'ok\n'
 
 printf 'add with space ................ '
-echo 'test' > test\ add-withspace
+create test\ add-withspace
 git xfer add test\ add-withspace
 if [ `cat "$cache" | grep "add-withspace" | wc -l` -ne 1 ]; then
     echo 'Fail! Error adding files.'
@@ -67,8 +74,7 @@ git xfer rm test\ add-withspace
 printf 'ok\n'
 
 printf 'add with space ................ '
-mkdir -p space\ test
-echo 'test' > space\ test/test-add-spacedir
+create space\ test/test-add-spacedir
 git xfer add space\ test
 if [ `cat "$cache" | grep "test-add-spacedir" | wc -l` -ne 1 ]; then
     echo 'Fail! Error adding files.'
@@ -80,7 +86,7 @@ rm -rf space\ test
 printf 'ok\n'
 
 # add without gitignore
-echo 'test' > test-gitignore
+create test-gitignore
 git xfer add --no-ignore test-gitignore
 printf 'add no-ignore ................. '
 if [ `cat "$base/.gitignore" | grep "test-gtignore" | wc -l` -ne 0 ]; then
@@ -93,13 +99,13 @@ printf 'ok\n'
 
 # list
 printf 'list .......................... '
-echo 'test' > test-list
+create test-list
 git xfer add test-list
 if [ `git xfer list | wc -l` -ne 1 ]; then
     echo 'Fail! Error listing files.'
     exit 1
 fi
-git xfer list -v > "$cache.tst"
+git xfer list > "$cache.tst"
 diff "$cache.tst" "$cache"
 if [ `diff "$cache.tst" "$cache" | wc -l` -ne 0 ]; then
     echo 'Fail! Error listing verbose.'
@@ -109,11 +115,58 @@ if [ `diff "$cache.tst" "$cache" | wc -l` -ne 0 ]; then
 fi
 rm "$cache.tst"
 git xfer rm test-list
+cd "$testdir"/git-xfer/test
+create test-remote-list
+git xfer add test-remote-list
+cd "$base/test"
+git xfer sync testserver master
+git xfer list testserver > "$cache.tst"
+if [ `diff "$cache.tst" "$testdir"/git-xfer/.git/xfer/cache | wc -l` -ne 0 ]; then
+    echo 'Fail! Error listing remote server.'
+    rm "$cache.tst"
+    clean
+    exit 1
+fi
+cd "$testdir"/git-xfer/test
+git xfer rm test-remote-list
+cd "$base/test"
+rm "$cache.tst"
+printf 'ok\n'
+
+printf 'diff ........................... '
+cd "$testdir"/git-xfer/test
+create test-remote-diff
+create test-common-diff
+git xfer add test-remote-diff test-common-diff
+cd "$base/test"
+create test-local-diff
+create test-common-diff
+git xfer add test-local-diff test-common-diff
+git xfer sync testserver master
+if [ `git xfer diff testserver | grep '>' | grep 'test-local-diff' | wc -l` -eq 1 ]; then
+    echo 'Fail! Error getting difference between servers.'
+    clean
+    exit 1
+fi
+if [ `git xfer diff testserver | grep '<' | grep 'test-remote-diff' | wc -l` -eq 1 ]; then
+    echo 'Fail! Error getting difference between servers.'
+    clean
+    exit 1
+fi
+if [ `git xfer diff testserver | grep 'test-common-diff' | wc -l` -ne 0 ]; then
+    echo 'Fail! Error getting difference between servers.'
+    clean
+    exit 1
+fi
+git xfer rm test-local-diff test-common-diff
+cd "$testdir"/git-xfer/test
+git xfer rm test-remote-diff test-common-diff
 printf 'ok\n'
 
 # remove
 printf 'remove ........................ '
-echo 'test' > test-remove
+cd "$base/test"
+create test-remove
 git xfer add test-remove
 if [ `cat "$cache" | wc -l` -ne 1 ]; then
     echo 'Fail! Error adding files.'
@@ -134,7 +187,7 @@ printf 'ok\n'
 
 # archive
 printf 'archive ....................... '
-echo 'test-archive' > test-archive
+create test-archive
 git xfer add test-archive
 git xfer archive archive.zip
 if [ ! -e archive.zip ]; then
@@ -165,10 +218,9 @@ printf 'ok\n'
 # push
 printf 'push .......................... '
 cd "$base/test"
-mkdir -p space\ test
-echo 'test' > test-local-file
-echo 'test' > test-file\ withspace
-echo 'test' > space\ test/test-file
+create test-local-file
+create test-file\ withspace
+create space\ test/test-file
 git xfer add test-local-file test-file\ withspace space\ test/test-file
 git xfer push testserver
 cd "$testdir"/git-xfer/test
@@ -211,10 +263,9 @@ printf 'ok\n'
 # pull
 printf 'pull .......................... '
 cd "$testdir/git-xfer/test"
-mkdir -p space\ test
-echo 'test' > test-remote-file
-echo 'test' > test-file\ withspace
-echo 'test' > space\ test/test-file
+create test-remote-file
+create test-file\ withspace
+create space\ test/test-file
 git xfer add test-remote-file test-file\ withspace space\ test/test-file
 cd "$base/test"
 git xfer pull testserver

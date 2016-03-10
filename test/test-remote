@@ -19,6 +19,7 @@ cp -r "$base" "$testdir/"
 if [ ! `git remote | grep "testserver"` ]; then
     git remote add testserver ssh://$USER@localhost:2222$testdir/git-xfer
 fi
+git xfer --reset
 
 
 # funcs
@@ -35,30 +36,37 @@ clean() {
     touch "$cache"
 }
 
+create() {
+    dir=`dirname "$1"`
+    mkdir -p "$dir"
+    echo "$1" > "$1"
+}
+
 
 # testing
 # -------
-echo -n 'sync .......................... '
+# sync
+printf 'sync .......................... '
 cd "$testdir"/git-xfer/
 git branch testing
 git checkout testing
 cd "$base/test"
+git branch | grep 'master'
 git xfer sync testserver master
 cd "$testdir"/git-xfer/test
-if [ `git branch | grep '* master' | wc -l` -ne 1 ]; then
+if [ `git branch | grep 'master' | wc -l` -ne 1 ]; then
     echo 'Sync failed!';
     clean
     exit 1
 fi
-echo 'ok'
+printf 'ok\n'
 
 # push
-echo -n 'push .......................... '
+printf 'push .......................... '
 cd "$base/test"
-mkdir -p space\ test
-echo 'test' > test-local-file
-echo 'test' > test-file\ withspace
-echo 'test' > space\ test/test-file
+create test-local-file
+create test-file\ withspace
+create space\ test/test-file
 git xfer add test-local-file test-file\ withspace space\ test/test-file
 git xfer push testserver
 cd "$testdir"/git-xfer/test
@@ -99,12 +107,11 @@ rm -rf space\ test
 printf 'ok\n'
 
 # pull
-echo 'pull .......................... '
+printf 'pull .......................... '
 cd "$testdir/git-xfer/test"
-mkdir -p space\ test
-echo 'test' > test-remote-file
-echo 'test' > test-file\ withspace
-echo 'test' > space\ test/test-file
+create test-remote-file
+create test-file\ withspace
+create space\ test/test-file
 git xfer add test-remote-file test-file\ withspace space\ test/test-file
 cd "$base/test"
 git xfer pull testserver

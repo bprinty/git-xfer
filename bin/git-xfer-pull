@@ -95,7 +95,6 @@ main() {
             file=`echo "$file" | sed 's/\\\ / /g'`
             sshfile=`echo "$file" | sed 's/ /\\\ /g'`
             if [ ! -e "$file" -o "$FORCE" = "TRUE" ]; then
-		echo "$file"
                 mkdir -p `dirname "$file"`
                 scp -P $port $url:"$repo/$sshfile" "$file"
                 git xfer add --no-ignore "$file"

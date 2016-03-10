@@ -13,6 +13,8 @@ usage() {
     echo ""
     echo "Options:"
     echo "  -h | --help              Show help and exit."
+    echo "  -f | --force             Copy over existing files."
+    echo "  -p | --port              Explicitly set port for remote."
 }
 
 
@@ -23,10 +25,14 @@ main() {
         usage; exit 1
     fi
 
+    FORCE='FALSE'
     case "$1" in
         "-h"|"--help")
             usage; exit 0
             ;;
+	"-f"|"--force")
+	    FORCE='TRUE'; shift;
+	    ;;
         "-p"|"--port")
             port="$2"; shift; shift
             ;;
@@ -77,22 +83,23 @@ main() {
         # local repo
         for file in `git xfer diff $dest | grep '>' | sed 's/> .*  //g'`; do
             file=`echo "$file" | sed 's/\\\ /\ /g'`
-            if [ ! -e "$file" ]; then
+            if [ ! -e "$file" -o "$FORCE" = "TRUE" ]; then
                 mkdir -p `dirname "$file"`
                 cp "$repo/$file" "$file"
+		git xfer add --no-ignore "$file"
             fi
-            git xfer add --no-ignore "$file"
         done
     else
         # remote repo
         for file in `git xfer diff $dest | grep '>' | sed 's/> .*  //g'`; do
             file=`echo "$file" | sed 's/\\\ / /g'`
             sshfile=`echo "$file" | sed 's/ /\\\ /g'`
-            if [ ! -e "$file" ]; then
+            if [ ! -e "$file" -o "$FORCE" = "TRUE" ]; then
+		echo "$file"
                 mkdir -p `dirname "$file"`
                 scp -P $port $url:"$repo/$sshfile" "$file"
-            fi
-            git xfer add --no-ignore "$file"
+                git xfer add --no-ignore "$file"
+	    fi
         done
     fi
     IFS=$OLDIFS

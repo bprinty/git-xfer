@@ -26,17 +26,15 @@ add(){
         shasum=`sha1sum "$1" | awk '{ print $1 }'`
     fi
     fname=$(echo "$1" | sed "s|$base|.|" | sed 's/ /\\ /'g)
-    if [ ! `grep "$shasum" "$cache" | wc -l` -gt 0 ]; then
-        echo "$shasum  $fname" >> "$cache"
-        sort "$cache" | uniq > "$cache.lck"
-        mv "$cache.lck" "$cache"
-        if [ "$gitignore" = "TRUE" ]; then
-            if [ ! `grep "$fname" "$base/.gitignore"` ]; then
-                echo "$fname" | sed "s|./||" >> "$base/.gitignore"
-                git add "$base/.gitignore"
-    	   fi
+    echo "$shasum  $fname" >> "$cache"
+    if [ "$gitignore" = "TRUE" ]; then
+        if [ ! `grep "$fname" "$base/.gitignore"` ]; then
+            echo "$fname" | sed "s|./||" >> "$base/.gitignore"
+            git add "$base/.gitignore"
         fi
     fi
+    sort "$cache" | uniq > "$cache.lck"
+    mv "$cache.lck" "$cache"    
 }
 
 main() {

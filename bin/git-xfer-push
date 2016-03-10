@@ -13,6 +13,8 @@ usage() {
     echo ""
     echo "Options:"
     echo "  -h | --help              Show help and exit."
+    echo "  -f | --force             Copy over existing files."
+    echo "  -p | --port              Explicitly set port for remote."
 }
 
 
@@ -23,10 +25,14 @@ main() {
         usage; exit 1
     fi
 
+    FORCE='FALSE'
     case "$1" in
         "-h"|"--help")
             usage; exit 0
             ;;
+	"-f"|"--force")
+	    FORCE="TRUE"; shift;
+	    ;;
         "-p"|"--port")
             port="$2"; shift; shift
             ;;
@@ -80,7 +86,12 @@ main() {
     cd "$base"
     OLDIFS=$IFS;
     IFS="$(printf '\n\t')"
-    for file in `git xfer diff $dest | grep '<' | sed 's/< .*  //g'`; do
+    if [ "$FORCE" = "TRUE" ]; then
+	files=`git xfer list -f`
+    else
+	files=`git xfer diff $dest | grep '<' | sed 's/< .*  //g'`
+    fi
+    for file in $files; do
         file=`echo "$file" | sed 's/\\\ / /g'`
         if [ -z $port ]; then
             # copy locally

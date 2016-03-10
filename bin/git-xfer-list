@@ -37,6 +37,10 @@ main() {
         cache="$cache-$1"
     fi
 
+    if [ ! -e "$cache" ]; then
+       echo ''; exit 0
+    fi
+
     if [ "$FILES" = "TRUE" ]; then
         cat "$cache" | sed 's/.*\.\//.\//g' | sed 's/  local.*//g'
     else

@@ -36,6 +36,8 @@ main() {
     fi
 
     remotecache="$base/.git/xfer/cache-$dest"
+    touch "$remotecache"
+    touch "$cache"
     diff "$cache" "$remotecache" | tail -n+2
 
 }

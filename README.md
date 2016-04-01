@@ -74,5 +74,4 @@ git xfer pull <remote>
 
 ## Questions/Feedback:
 
-Contact bprinty@gmail.com> to provide feedback.
-
+Submit an issue in the GitHub issue tracker.

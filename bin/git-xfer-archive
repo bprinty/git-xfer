@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# push functionality of git-xfer plugin
+# archive xfer set of files (including directory structure)
 # 
 # @author <bprinty@gmail.com>
 # ------------------------------------------------
@@ -38,32 +38,18 @@ main() {
         usage; exit 1
     fi
 
-
-    # clear archive for use
-    adir="$base/.git/xfer/archive"
-    rm -rf "$adir"
-    mkdir -p "$adir"
-
     # add files to be archived
-    cwd=`pwd`
+    tarlist="$base/.git/xfer/archive.$$.txt"
     cd "$base"
     for file in `cat "$cache" | grep -v ",$exclude" | awk '{ print $2 }'`; do
-        fdir="$adir"/`dirname $file`
-        mkdir -p "$fdir"
-        cp "$file" "$fdir/"
+        echo "$file" >> $tarlist
     done
 
     # archive and save to specified file
-    cd "$adir"
-    zip -r archive.zip *
-    cd "$cwd"
-    mv "$adir/archive.zip" "$archive"
-
-    # clean up
-    rm -rf "$adir"
+    tar -cvf "$archive.tar" -T "$tarlist"
+    gzip "$archive.tar"
 
     exit 0
-
 }
 
 base=`git rev-parse --show-toplevel`

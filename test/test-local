@@ -188,15 +188,16 @@ printf 'ok\n'
 # archive
 printf 'archive ....................... '
 create test-archive
-git xfer add test-archive
-git xfer archive archive.zip
-if [ ! -e archive.zip ]; then
+create test/test-archive
+git xfer add test-archive test/test-archive
+git xfer archive git-xfer-archive
+if [ ! -e git-xfer-archive.tar.gz ]; then
     echo 'Fail! Archive does not exist.'
     clean
     exit 1
 fi
-git xfer rm test-archive
-rm archive.zip
+git xfer rm test-archive test/test-archive
+rm git-xfer-archive.tar.gz
 printf 'ok\n'
 
 # sync

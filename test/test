@@ -1,0 +1,77 @@
+#!/bin/bash
+#
+# wrapper script for test management
+#
+# @author <bprinty@gmail.com>
+# --------------------------------------
+
+
+# init
+# ----
+CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BASE=`git rev-parse --show-toplevel`
+CACHE="$BASE/.git/xfer/cache"
+FILES=""
+
+# funcs
+# -----
+usage() {
+    echo ""
+    echo "Usage: test <name> [<type>]"
+    echo ""
+    echo "Arguments:"
+    echo "  <name>       Name of test to perform."
+    echo ""
+    echo "Optional Arguments:"
+    echo "  <type>       Remote type to test (local|remote)" 
+    echo ""
+    exit 1
+}
+
+clean() {
+    # # remove testing files
+    # for i in $FILES; do
+    #     rm -rf "$i"
+    # done
+
+    # clear remotes and branches
+    if [ `git remote | grep 'testserver' | wc -l` -eq 1 ]; then
+        git remote rm testserver
+    fi
+    if [ `git branch | grep 'testing' | wc -l` -eq 1 ]; then
+        git branch -d testing
+    fi
+
+    # clear cache
+    rm -rf "$CACHE"
+    touch "$CACHE"
+}
+
+create() {
+    dir=`dirname "$1"`
+    mkdir -p "$dir"
+    echo "$1" > "$1"
+    FILES="$FILES $1"
+}
+
+
+# test
+# ----
+if [ $# -eq 0 ]; then
+    usage
+fi
+
+if [ ! -z $2 ]; then
+    if [ -e "$CWD/config/$2" ]; then
+        source "$CWD/config/$2"
+    fi
+fi
+
+if [ -e "$CWD/test-$1" ]; then
+    source "$CWD/test-$1"
+fi
+
+
+# clean
+# -----
+clean

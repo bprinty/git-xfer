@@ -3,3 +3,4 @@ test/test-archive
 test/test/test-archive
 test-remote-list
 test/test/test-archive
+test-add

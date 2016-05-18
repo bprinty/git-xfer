@@ -1,0 +1,5 @@
+#!/bin/bash
+
+SANDBOX=/tmp/git-xfer-testing-local
+PORT=2222
+REMOTE="ssh://$USER@localhost:$PORT$SANDBOX/git-xfer"

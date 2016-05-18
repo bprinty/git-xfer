@@ -7,11 +7,11 @@
 
 # config
 # ------
-BIN_DIR   = /usr/bin
-LOADER    = git-xfer
-COMMANDS  = git-xfer-push git-xfer-pull git-xfer-add git-xfer-remove git-xfer-list git-xfer-sync git-xfer-diff
-TESTS     = test-local
-# TESTS     = test-local test-remote
+BIN_DIR        = /usr/bin
+LOADER         = git-xfer
+COMMANDS       = git-xfer-push git-xfer-pull git-xfer-add git-xfer-remove git-xfer-list git-xfer-sync git-xfer-diff
+TESTS          = add
+TEST_REMOTES   = local
 
 
 # targets
@@ -31,7 +31,11 @@ uninstall:
 
 .PHONY: test
 test:
-	PATH=`pwd`/bin:$$PATH && for cmd in $(TESTS); do sh ./test/$$cmd; done
+	@PATH=`pwd`/bin:$$PATH && for tst in $(TESTS); do \
+		for remote in $(TEST_REMOTES); do \
+			./test/test $$tst $$remote; \
+		done \
+	done
 
 release: test
 	PATH=`pwd`/bin:$$PATH && TAG=`git xfer -v` && git tag -d $$TAG || echo "local tag available"

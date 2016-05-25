@@ -11,7 +11,8 @@
 CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BASE=`git rev-parse --show-toplevel`
 CACHE="$BASE/.git/xfer/cache"
-FILES=""
+TSANDBOX="$CWD/sandbox"
+
 
 # funcs
 # -----
@@ -29,10 +30,8 @@ usage() {
 }
 
 clean() {
-    # # remove testing files
-    # for i in $FILES; do
-    #     rm -rf "$i"
-    # done
+    # remove testing files
+    # rm -rf $TSANDBOX
 
     # clear remotes and branches
     if [ `git remote | grep 'testserver' | wc -l` -eq 1 ]; then
@@ -49,9 +48,56 @@ clean() {
 
 create() {
     dir=`dirname "$1"`
+    if [ "$dir" == "." ]; then
+        
     mkdir -p "$dir"
     echo "$1" > "$1"
-    FILES="$FILES $1"
+}
+
+FAIL='FALSE'
+assertEqual() {
+    GREEN='\033[0;32m'
+    RED='\033[0;31m'
+    NC='\033[0m'
+    if [ "$1" == "$2" ]; then
+        printf $GREEN'✓'$NC
+    else
+        printf $RED'✗'$NC
+        FAIL='TRUE'
+    fi
+}
+
+assertContains() {
+    GREEN='\033[0;32m'
+    RED='\033[0;31m'
+    NC='\033[0m'
+    if [ `cat "$1" | grep "$2" | wc -l` -gt 0 ]; then
+        printf $GREEN'✓'$NC
+    else
+        printf $RED'✗'$NC
+        FAIL='TRUE'
+    fi
+}
+
+assertNotContains() {
+    GREEN='\033[0;32m'
+    RED='\033[0;31m'
+    NC='\033[0m'
+    if [ `cat "$1" | grep "$2" | wc -l` -gt 0 ]; then
+        printf $RED'✗'$NC
+        FAIL='TRUE'
+    else
+        printf $GREEN'✓'$NC
+    fi
+}
+
+getShasum() {
+    if [ `uname` = "Darwin" ]; then
+        shasum=`shasum "$1" | awk '{ print $1 }'`
+    else
+        shasum=`sha1sum "$1" | awk '{ print $1 }'`
+    fi
+    echo $shasum
 }
 
 
@@ -68,7 +114,10 @@ if [ ! -z $2 ]; then
 fi
 
 if [ -e "$CWD/test-$1" ]; then
+    mkdir -p "$TSANDBOX"
+    pushd "$TSANDBOX"
     source "$CWD/test-$1"
+    popd
 fi
 
 

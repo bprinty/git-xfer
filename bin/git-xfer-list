@@ -13,22 +13,18 @@ usage() {
     echo ""
     echo "Options:"
     echo "  -h | --help              Show help and exit."
-    echo "  -f | --files             Show only files."
 }
 
 
 # exec
 # ----
-main() {
+xrun() {
 
     local FILES="FALSE"
 
     case $1 in
         "-h"|"--help")
             usage; exit 0
-            ;;
-        "-f"|"--files")
-            FILES="TRUE"; shift
             ;;
     esac
 
@@ -40,13 +36,5 @@ main() {
        echo ''; exit 0
     fi
 
-    if [ "$FILES" = "TRUE" ]; then
-        cat "$cache" | sed 's/.*\.\//.\//g' | sed 's/  local.*//g'
-    else
-        cat "$cache"
-    fi
+    cat "$cache"
 }
-
-base=`git rev-parse --show-toplevel`
-cache="$base/.git/xfer/cache"
-main "$@"

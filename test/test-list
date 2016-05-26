@@ -5,15 +5,10 @@
 # @author <bprinty@gmail.com>
 # ------------------------------------------------
 
-# usage
-printf 'list usage .................... '
-assertEqual 4 `git xfer add | wc -l`
-echo ''
 
 # list
-printf 'list ........................... '
 create add-test
 create space\ dir/add-test\ with\ space
 git xfer add add-test space\ dir/add-test\ with\ space
-# git xfer list testtttt
-echo ''
+assertEqual 2 `git xfer list | wc -l`
+git xfer rm add-test space\ dir/add-test\ with\ space

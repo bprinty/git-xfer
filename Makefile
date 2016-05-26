@@ -10,7 +10,7 @@
 BIN_DIR        = /usr/bin
 LOADER         = git-xfer
 COMMANDS       = git-xfer-push git-xfer-pull git-xfer-add git-xfer-remove git-xfer-list git-xfer-sync git-xfer-diff
-TESTS          = add
+TESTS          = add list
 TEST_REMOTES   = local
 
 

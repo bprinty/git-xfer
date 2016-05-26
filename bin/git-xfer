@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/bash
 #
 # git plugin enabling remote repo syncing, because
 # git-annex doesn't seem to fit this need well
@@ -25,51 +25,49 @@ usage() {
 }
 
 version() {
-    echo "0.0.5"
+    echo "0.1.0"
 }
 
 
 # exec
 # ----
-main() {
-    if [ "$#" -lt 1 ]; then
-        usage; exit 1
-    fi
-
-    local subcommand="$1"; shift
-
-    case $subcommand in
-        "-h"|"--help")
-            usage; exit 0
-            ;;
-        "-v"|"--version")
-            version; exit 0
-            ;;
-        "-r"|"--reset")
-            rm -rf "$base/.git/xfer"; exit 0
-            ;;
-    esac
-
-    # set up git working directory
-    local workingdir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
-    if [ ! -e "$workingdir/git-xfer-$subcommand" ]; then
-        usage; exit 1
-    fi
-
-    # ensure user is inside git repository
-    gitdir=`git rev-parse --show-toplevel`
-    if [ ! -e "$gitdir" ]; then
-        exit 1
-    fi
-
-    # create directory if not exists
-    if [ ! -e "$gitdir/.git/xfer" ]; then
-        mkdir "$gitdir/.git/xfer"
-    fi
-
-    sh "$workingdir/git-xfer-$subcommand" "$@"
-}
-
 base=`git rev-parse --show-toplevel`
-main "$@"
+cache="$base/.git/xfer/cache"
 
+if [ "$#" -lt 1 ]; then
+    usage; exit 1
+fi
+
+subcommand="$1"; shift
+
+case $subcommand in
+    "-h"|"--help")
+        usage; exit 0
+        ;;
+    "-v"|"--version")
+        version; exit 0
+        ;;
+    "-r"|"--reset")
+        rm -rf "$base/.git/xfer"; exit 0
+        ;;
+esac
+
+# set up git working directory
+scriptdir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+if [ ! -e "$scriptdir/git-xfer-$subcommand" ]; then
+    usage; exit 1
+fi
+
+# ensure user is inside git repository
+if [ ! -e "$base" ]; then
+    exit 1
+fi
+
+# create directory if not exists
+if [ ! -e "$base/.git/xfer" ]; then
+    mkdir "$base/.git/xfer"
+fi
+
+source "$scriptdir/git-xfer-utils"
+source "$scriptdir/git-xfer-$subcommand"
+xrun "$@"

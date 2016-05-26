@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/bash
 #
 # remove functionality of git-xfer plugin
 # 
@@ -19,24 +19,16 @@ usage() {
 # exec
 # ----
 remove(){
-    if [ `uname` = "Darwin" ]; then
-        shasum=`shasum "$1" | awk '{ print $1 }'`
-    else
-        shasum=`sha1sum "$1" | awk '{ print $1 }'`
-    fi
     if [ $delete ]; then
         rm "$1"
     fi
-    fname=$(echo "$1" | sed "s|$base|.|" | sed 's/ /\\ /'g)
-    grep -v "$shasum" "$cache" > "$cache.lck"
+    fname=`xescape "$1"`
+    fname=`xescape "$fname"`
+    grep -v "$fname" "$cache" > "$cache.lck"
     mv "$cache.lck" "$cache"
-    ignorename=`echo "$fname" | sed "s|./||"`
-    fgrep -v "$ignorename" "$base/.gitignore" > "$base/.gitignore.lck"
-    mv "$base/.gitignore.lck" "$base/.gitignore"
-    git add "$base/.gitignore"
 }
 
-main() {
+xrun() {
     if [ "$#" -lt 1 ]; then
         usage; exit 1
     fi
@@ -68,7 +60,3 @@ main() {
         fi
     done
 }
-
-base=`git rev-parse --show-toplevel`
-cache="$base/.git/xfer/cache"
-main "$@"

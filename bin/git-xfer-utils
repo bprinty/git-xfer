@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# common utilities used across git-xfer plugin
+# 
+# @author <bprinty@gmail.com>
+# ------------------------------------------------
+
+
+xshasum() {
+    if [ `uname` = "Darwin" ]; then
+        shasum=`shasum "$1" | awk '{ print $1 }'`
+    else
+        shasum=`sha1sum "$1" | awk '{ print $1 }'`
+    fi
+    echo $shasum
+ }
+
+ xescape() {
+ 	echo "$1" | sed "s|$base|.|" | sed 's/ /\\ /'g
+ }

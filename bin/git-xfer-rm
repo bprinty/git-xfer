@@ -1,8 +1,10 @@
-#!/usr/bin/env sh
+#!/bin/bash
 #
 # remove functionality of git-xfer plugin
 # 
 # @author <bprinty@gmail.com>
 # ------------------------------------------------
 
-git-xfer-remove -d "$@"
+
+delete='TRUE'
+source "$scriptdir/git-xfer-remove"

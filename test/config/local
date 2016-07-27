@@ -1,5 +1,4 @@
 #!/bin/bash
 
-SANDBOX=/tmp/git-xfer-testing-local
-REMOTE="$SANDBOX/git-xfer"
-
+REPO="/tmp/git-xfer-testing-local/git-xfer"
+REMOTE=$REPO

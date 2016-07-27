@@ -23,7 +23,6 @@ remove(){
         rm "$1"
     fi
     fname=`xescape "$1"`
-    fname=`xescape "$fname"`
     grep -v "$fname" "$cache" > "$cache.lck"
     mv "$cache.lck" "$cache"
 }
@@ -42,7 +41,6 @@ xrun() {
             ;;
     esac
 
-    touch "$cache"
     for i in "$@"; do
         if [ "$i" = "." ]; then
             fullpath=`pwd`

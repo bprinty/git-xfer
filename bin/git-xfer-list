@@ -29,7 +29,8 @@ xrun() {
     esac
 
     if [ ! -z $1 ]; then
-        cache="$cache-$1"
+        # TODO: ssh into server and do git xfer list
+        echo 'Not Yet Implemented!'; exit 1
     fi
 
     if [ ! -e "$cache" ]; then

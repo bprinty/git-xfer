@@ -10,8 +10,8 @@
 BIN_DIR        = /usr/bin
 LOADER         = git-xfer
 COMMANDS       = git-xfer-push git-xfer-pull git-xfer-add git-xfer-remove git-xfer-list git-xfer-sync git-xfer-diff
-TESTS          = usage add list
-TEST_REMOTES   = local
+TESTS          = usage add-remove list archive push
+REMOTES        = local
 
 
 # targets
@@ -32,7 +32,7 @@ uninstall:
 .PHONY: test
 test:
 	@PATH=`pwd`/bin:$$PATH && for tst in $(TESTS); do \
-		for remote in $(TEST_REMOTES); do \
+		for remote in $(REMOTES); do \
 			./test/test $$tst $$remote; \
 		done \
 	done

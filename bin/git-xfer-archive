@@ -9,7 +9,7 @@
 # meta
 # ----
 usage() {
-    echo "usage: git xfer archive [options] <name>"
+    echo "usage: git xfer archive [options] <name> [<filelist>]"
     echo ""
     echo "Options:"
     echo "  -h | --help              Show help and exit."
@@ -18,7 +18,7 @@ usage() {
 
 # exec
 # ----
-main() {
+xrun() {
     if [ "$#" -lt 1 ]; then
         usage; exit 1
     fi
@@ -39,19 +39,20 @@ main() {
     fi
 
     # add files to be archived
-    tarlist="$base/.git/xfer/archive.$$.txt"
-    cd "$base"
-    for file in `cat "$cache" | grep -v ",$exclude" | awk '{ print $2 }'`; do
-        echo "$file" >> $tarlist
-    done
+    tarlist="$cache"
+    if [ ! -z $2 ]; then
+        if [ ! -e "$2" ]; then
+            echo 'Specified list of files to archive does not exist!'
+            exit 1
+        fi
+        tarlist="$2"
+    fi
 
     # archive and save to specified file
-    tar -cvf "$archive.tar" -T "$tarlist"
-    gzip "$archive.tar"
+    fullpath=$(cd "$(dirname $archive)" && pwd -P)/$(basename "$archive")
+    cd "$base"
+    tar -cvf "$fullpath.tar" -T "$tarlist" 2>/dev/null
+    gzip "$fullpath.tar"
 
     exit 0
 }
-
-base=`git rev-parse --show-toplevel`
-cache="$base/.git/xfer/cache"
-main "$@"

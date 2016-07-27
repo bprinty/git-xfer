@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# test push functionality for git plugin
+# 
+# @author <bprinty@gmail.com>
+# ------------------------------------------------
+
+# push
+create add-test
+create add-test\ with\ space
+create space\ dir/add-test\ with\ space
+git xfer add add-test
+git xfer add add-test\ with\ space
+git xfer add space\ dir/add-test\ with\ space
+assertEqual 3 `git xfer list | wc -l`
+git xfer push testserver master
+cd "$REMOTE_SANDBOX"
+assertExists "add-test"
+assertContains "$CACHE" "add-test"
+assertExists "add-test with space"
+assertContains "$CACHE" "add-test with space"
+assertExists "space dir/add-test with space"
+assertContains "$CACHE" "space dir/add-test with space"

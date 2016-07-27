@@ -13,104 +13,51 @@ usage() {
     echo ""
     echo "Options:"
     echo "  -h | --help              Show help and exit."
-    echo "  -f | --force             Copy over existing files."
     echo "  -p | --port              Explicitly set port for remote."
 }
 
 
 # exec
 # ----
-main() {
+xrun() {
+
     if [ "$#" -lt 1 ]; then
         usage; exit 1
     fi
 
-    FORCE='FALSE'
     case "$1" in
         "-h"|"--help")
             usage; exit 0
             ;;
-	"-f"|"--force")
-	    FORCE="TRUE"; shift;
-	    ;;
         "-p"|"--port")
-            port="$2"; shift; shift
+            port="$1": shift
             ;;
     esac
-
-    local dest="$1"
-
+    
     # verify remote
+    dest="$1"
     remote=`git remote -v | grep "$dest" | awk '{ print $2 }' | uniq | sed 's/\.git$//'`
     if [ ! "$remote" ]; then
         echo 'cannot find remote -- try git remote add <remote> <url>'
     fi
 
-    # handle ssh url type
-    if [ `echo "$remote" | grep 'ssh://'` ]; then
-        urlstring=`echo "$remote" | sed 's|ssh://||' | sed 's|:|  |' | sed 's|/|  /|'`
-        url=`echo "$urlstring" | awk '{ print $1 }'`
-        if [ ! `echo "$urlstring" | awk '{ print $3 }'` ]; then
-            port="22"
-            repo=`echo "$urlstring" | awk '{ print $2 }'`
-        else
-            port=`echo "$urlstring" | awk '{ print $2 }'`
-            repo=`echo "$urlstring" | awk '{ print $3 }'`
-        fi
-
-    # don't allow operations to github (they have git-lfs)
-    elif [ `echo "$remote" | grep 'github.com'` ]; then
-        echo 'Syncing with GitHub is not supported!'
-        exit 1
-
-    # ssh specification without port
-    elif [ `echo "$remote" | grep '@' | grep ':'` ]; then
-        url=`echo "$remote" | sed 's|:|  |' | awk '{ print $1 }'`
-        port="22"
-        repo=`echo "$remote" | sed 's|:|  |' | awk '{ print $2 }'`
-    
-    # local repo
-    else
-        repo="$remote"
-    fi
-
     # update remote
+    if [ -z $port ]; then
+        port=`xremoteport "$remote"`
+    fi
+    url=`xremoteurl "$remote"`
+    repo=`xremoterepo "$remote"`
     branch=`git branch | grep '* '| sed 's/\* //g'`
-    if [ `echo $branch | grep 'detached from' | wc -l` -ne 0 ]; then
-        echo 'git-xfer will not work on a detached branch!'
-        exit 1
-    fi
-    git xfer sync "$dest" "$branch"
-
-    # do the copying
-    cd "$base"
-    OLDIFS=$IFS;
-    IFS="$(printf '\n\t')"
-    if [ "$FORCE" = "TRUE" ]; then
-	files=`git xfer list -f`
+    if [ "$url" ]; then
+        echo 'in!'
     else
-	files=`git xfer diff $dest | grep '<' | sed 's/< .*  //g'`
+        pushd "$repo" 2>&1 1>/dev/null
+        git checkout "$branch"
+        git pull
+        popd 2>&1 1>/dev/null
     fi
-    for file in $files; do
-        file=`echo "$file" | sed 's/\\\ / /g'`
-        if [ -z $port ]; then
-            # copy locally
-            mkdir -p `dirname "$repo/$file"`
-            cp "$file" "$repo/$file"
-            cd "$repo" && git xfer add --no-ignore "$file" && cd "$base"
-        else
-            # copy over ssh
-            sshfile=`echo "$file" | sed 's/ /\\\ /g'`
-            ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; mkdir -p `dirname $sshfile`;"
-            scp -P $port "$file" $url:"$repo/$sshfile"
-            ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git xfer add --no-ignore $sshfile" 2>&1 1>/dev/null
-        fi
-    done
-    IFS=$OLDIFS
+    # git xfer sync "$dest" "$branch"
+
+
     exit 0
-
 }
-
-base=`git rev-parse --show-toplevel`
-cache=$base/.git/xfer/cache
-main "$@"

@@ -1,21 +1,17 @@
 #!/bin/bash
 #
-# test add functionality for git plugin
+# test archive functionality for git plugin
 # 
 # @author <bprinty@gmail.com>
 # ------------------------------------------------
 
-# usage
-printf 'archive usage ................. '
-assertEqual 4 `git xfer add | wc -l`
-echo ''
-
 # archive
-printf 'archive ....................... '
-create test-archive
-create test/test-archive
-git xfer add test-archive test/test-archive
+create add-test
+git xfer add add-test
+create add-test\ with\ space
+git xfer add add-test\ with\ space
+create space\ dir/add-test\ with\ space
+git xfer add space\ dir/add-test\ with\ space
+assertEqual 3 `git xfer list | wc -l`
 git xfer archive git-xfer-archive
 assertExists git-xfer-archive.tar.gz
-git xfer rm test-archive test/test-archive
-echo ''

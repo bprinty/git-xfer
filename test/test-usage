@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# test add functionality for git plugin
+# test usage strings for git plugin
 # 
 # @author <bprinty@gmail.com>
 # ------------------------------------------------
@@ -9,4 +9,5 @@ assertEqual 4 `git xfer add | wc -l`
 assertEqual 4 `git xfer remove | wc -l`
 assertEqual 4 `git xfer rm | wc -l`
 assertEqual 4 `git xfer list -h | wc -l`
+assertEqual 4 `git xfer archive | wc -l`
 

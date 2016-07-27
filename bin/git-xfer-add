@@ -19,7 +19,6 @@ usage() {
 # exec
 # ----
 add(){
-    # TODO: look at printf way of string escaping
     fname=`xescape "$1"`
     echo "$fname" >> "$cache"
     sort "$cache" | uniq > "$cache.lck"

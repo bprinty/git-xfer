@@ -16,5 +16,47 @@ xshasum() {
  }
 
  xescape() {
- 	echo "$1" | sed "s|$base|.|" | sed 's/ /\\ /'g
+ 	echo "$1" | sed "s|$base|.|"
+ }
+
+ xremoteport() {
+    port="22"
+    if [ `echo "$1" | grep 'ssh://'` ]; then
+        urlstring=`echo "$1" | sed 's|ssh://||' | sed 's|:|  |' | sed 's|/|  /|'`
+        port=`echo "$urlstring" | awk '{ print $3 }'`
+        if [ ! $port ]; then
+            port="22"
+        fi
+    fi
+    echo "$port"
+ }
+
+xremoteurl() {
+ 	# ssh remote
+    if [ `echo "$1" | grep 'ssh://'` ]; then
+        urlstring=`echo "$1" | sed 's|ssh://||' | sed 's|:|  |' | sed 's|/|  /|'`
+        url=`echo "$urlstring" | awk '{ print $1 }'`
+
+    # ssh remote without ssh://
+    elif [ `echo "$1" | grep '@' | grep ':'` ]; then
+        url=`echo "$1" | sed 's|:|  |' | awk '{ print $1 }'`
+    fi
+    echo "$url"
+ }
+
+ xremoterepo() {
+ 	# ssh remote
+    if [ `echo "$1" | grep 'ssh://'` ]; then
+        urlstring=`echo "$1" | sed 's|ssh://||' | sed 's|:|  |' | sed 's|/|  /|'`
+        repo=`echo "$urlstring" | awk '{ print $3 }'`
+
+    # ssh remote without ssh://
+    elif [ `echo "$1" | grep '@' | grep ':'` ]; then
+        repo=`echo "$1" | sed 's|:|  |' | awk '{ print $2 }'`
+
+    # local repo
+    else
+        repo="$1"
+    fi
+    echo "$repo"
  }

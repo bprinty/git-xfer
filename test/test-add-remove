@@ -5,7 +5,7 @@
 # @author <bprinty@gmail.com>
 # ------------------------------------------------
 
-# add
+# simple
 create add-test
 git xfer add add-test
 assertContains "$CACHE" "add-test"
@@ -15,13 +15,13 @@ assertNotContains "$CACHE" "add-test"
 # space
 create add-test\ with\ space
 git xfer add add-test\ with\ space
-assertContains "$CACHE" 'add-test\\ with\\ space'
+assertContains "$CACHE" 'add-test with space'
 git xfer rm add-test\ with\ space
-assertNotContains "$CACHE" 'add-test\\ with\\ space'
+assertNotContains "$CACHE" 'add-test with space'
 
 # directory with space
 create space\ dir/add-test\ with\ space
 git xfer add space\ dir/add-test\ with\ space
-assertContains "$CACHE" 'space\\ dir/add-test\\ with\\ space'
+assertContains "$CACHE" 'space dir/add-test with space'
 git xfer rm space\ dir/add-test\ with\ space
-assertNotContains "$CACHE" 'space\\ dir/add-test\\ with\\ space'
+assertNotContains "$CACHE" 'space dir/add-test with space'

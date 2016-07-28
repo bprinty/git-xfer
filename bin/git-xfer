@@ -40,7 +40,7 @@ xshasum() {
  }
 
  xescape() {
-    echo "$1" | sed "s|$base|.|"
+    echo "$1" | sed "s|$base||" | sed "s|^/||"
  }
 
  xremoteport() {
@@ -90,6 +90,7 @@ xremoteurl() {
 # ----
 base=`git rev-parse --show-toplevel`
 cache="$base/.xfer"
+exclude="$base/.git/info/exclude"
 cachedb="$base/.git/xfer"
 
 if [ "$#" -lt 1 ]; then

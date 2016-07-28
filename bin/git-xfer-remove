@@ -24,7 +24,9 @@ remove(){
     fi
     fname=`xescape "$1"`
     grep -v "$fname" "$cache" > "$cache.lck"
+    grep -v "$fname" "$exclude" > "$exclude.lck"
     mv "$cache.lck" "$cache"
+    mv "$exclude.lck" "$exclude"
 }
 
 xrun() {

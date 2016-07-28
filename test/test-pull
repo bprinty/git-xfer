@@ -15,7 +15,6 @@ git xfer add add-test\ with\ space
 git xfer add space\ dir/add-test\ with\ space
 assertEqual 3 `git xfer list | wc -l`
 cd "$SANDBOX"
-git xfer list
 assertEqual 0 `git xfer list | wc -l`
 assertEqual 0 `git xfer diff testserver 2>/dev/null | grep '<' | wc -l`
 assertEqual 3 `git xfer diff testserver 2>/dev/null | grep '>' | wc -l`

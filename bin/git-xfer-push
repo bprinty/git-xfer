@@ -53,18 +53,23 @@ xrun() {
     cd "$base"
     "$scriptdir/git-xfer" diff "$dest" | grep '<' | sed 's|< ||g' > "$arbase.txt"
     "$scriptdir/git-xfer" archive "$arbase" "$arbase.txt"
+    cat << EOF > "$arbase.sh"
+#!/bin/bash
+tar xvf "$arbase.tar.gz"
+cat "$arbase.txt" >> "$rcache"
+sort "$rcache" | uniq >> "$rcache.lck"
+mv "$rcache.lck" "$rcache"
+rm -f "$arbase.tar.gz" "$arbase.txt" "$arbase.sh"
+EOF
+    >&2 echo "Transferring files..."
     if [ "$url" ]; then
-        echo 'in!'
+        scp -P $port "$arbase.tar.gz" "$arbase.txt" "$arbase.sh" $url:$repo/ &>/dev/null
+        ssh -p $port $url "cd $repo && sh $arbase.sh"
     else
-        cp "$arbase.tar.gz" "$arbase.txt" "$repo/"
-        cd "$repo"
-        tar xzf "$arbase.tar.gz"
-        cat "$arbase.txt" >> "$rcache.lck"
-        sort "$rcache.lck" | uniq >> "$rcache"
-        rm -f "$arbase.tar.gz" "$arbase.txt"
-        cd "$base"
+        cp "$arbase.tar.gz" "$arbase.txt" "$arbase.sh" "$repo/"
+        cd "$repo" && sh "$arbase.sh" && cd "$base"
     fi
-    rm -f "$arbase.tar.gz" "$arbase.txt"
+    rm -f "$arbase.tar.gz" "$arbase.txt" "$arbase.sh"
 
     exit 0
 }

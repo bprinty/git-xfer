@@ -13,5 +13,5 @@ git xfer add add-test\ with\ space
 create space\ dir/add-test\ with\ space
 git xfer add space\ dir/add-test\ with\ space
 assertEqual 3 `git xfer list | wc -l`
-git xfer archive git-xfer-archive
+git xfer archive git-xfer-archive &>/dev/null
 assertExists git-xfer-archive.tar.gz

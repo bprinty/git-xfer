@@ -51,6 +51,7 @@ xrun() {
     # archive and save to specified file
     fullpath=$(cd "$(dirname $archive)" && pwd -P)/$(basename "$archive")
     cd "$base"
+    >&2 echo "Creating archive with tracked files..."
     tar -cvf "$fullpath.tar" -T "$tarlist" 2>/dev/null
     gzip "$fullpath.tar"
 

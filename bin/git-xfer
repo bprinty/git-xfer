@@ -7,20 +7,21 @@
 # ------------------------------------------------
 
 
-# meta
-# ----
+# methods
+# -------
 usage() {
     echo "usage: git xfer [--version] [--help] <command> [<args>]"
     echo
     echo "Available subcommands are:"
+    echo "  list      List locally tracked files or remote tracked files"
     echo "  add       Add file to be tracked by git-xfer"
     echo "  remove    Remove file for tracking via git-xfer"
     echo "  rm        Remove file and remove tracking information for file"
     echo "  push      Push local files to remote"
     echo "  pull      Pull files from remote server locally"
     echo "  sync      Sync remote branch"
-    echo "  list      List locally tracked files or remote tracked files"
     echo "  diff      List differences between local and remote"
+    echo "  archive   Create archive with all tracked files"
     echo "  reset     Reset tracked caches back to normal"
     echo
 }
@@ -28,6 +29,61 @@ usage() {
 version() {
     echo "0.1.0"
 }
+
+xshasum() {
+    if [ `uname` = "Darwin" ]; then
+        shasum=`shasum "$1" | awk '{ print $1 }'`
+    else
+        shasum=`sha1sum "$1" | awk '{ print $1 }'`
+    fi
+    echo $shasum
+ }
+
+ xescape() {
+    echo "$1" | sed "s|$base|.|"
+ }
+
+ xremoteport() {
+    port="22"
+    if [ `echo "$1" | grep 'ssh://'` ]; then
+        urlstring=`echo "$1" | sed 's|ssh://||' | sed 's|:|  |' | sed 's|/|  /|'`
+        port=`echo "$urlstring" | awk '{ print $2 }'`
+        if [ ! $port ]; then
+            port="22"
+        fi
+    fi
+    echo "$port"
+ }
+
+xremoteurl() {
+    # ssh remote
+    if [ `echo "$1" | grep 'ssh://'` ]; then
+        urlstring=`echo "$1" | sed 's|ssh://||' | sed 's|:|  |' | sed 's|/|  /|'`
+        url=`echo "$urlstring" | awk '{ print $1 }'`
+
+    # ssh remote without ssh://
+    elif [ `echo "$1" | grep '@' | grep ':'` ]; then
+        url=`echo "$1" | sed 's|:|  |' | awk '{ print $1 }'`
+    fi
+    echo "$url"
+ }
+
+ xremoterepo() {
+    # ssh remote
+    if [ `echo "$1" | grep 'ssh://'` ]; then
+        urlstring=`echo "$1" | sed 's|ssh://||' | sed 's|:|  |' | sed 's|/|  /|'`
+        repo=`echo "$urlstring" | awk '{ print $3 }'`
+
+    # ssh remote without ssh://
+    elif [ `echo "$1" | grep '@' | grep ':'` ]; then
+        repo=`echo "$1" | sed 's|:|  |' | awk '{ print $2 }'`
+
+    # local repo
+    else
+        repo="$1"
+    fi
+    echo "$repo"
+ }
 
 
 # exec
@@ -66,6 +122,5 @@ if [ ! -e "$base" ]; then
     git status
 fi
 
-source "$scriptdir/git-xfer-utils"
 source "$scriptdir/git-xfer-$subcommand"
 xrun "$@"

@@ -55,14 +55,8 @@ xrun() {
     rcache=`echo "$cache" | sed "s|$base|$repo|g"`
     >&2 echo "Syncing remote repo..."
     if [ "$url" ]; then
-        echo 'in'
-        # ssh -p $port "$url" << EOF
-        #     git checkout "$branch" && git pull
-        #     echo 'done with git'
-        #     if [ -e .xfer ]; then
-        #         cat .xfer
-        #     fi
-        # EOF | sed '1,/done with git/d' > "$cachedb/cache-$dest"
+        ssh -p $port "$url" "cd "$repo" && git checkout "$branch" && git pull"
+        scp -P $port "$url:$rcache" "$cachedb/cache-$dest"
     else
         pushd "$repo" &>/dev/null
         git checkout "$branch" && git pull

@@ -21,6 +21,7 @@ usage() {
     echo "  sync      Sync remote branch"
     echo "  list      List locally tracked files or remote tracked files"
     echo "  diff      List differences between local and remote"
+    echo "  reset     Reset tracked caches back to normal"
     echo
 }
 
@@ -33,6 +34,7 @@ version() {
 # ----
 base=`git rev-parse --show-toplevel`
 cache="$base/.xfer"
+cachedb="$base/.git/xfer"
 
 if [ "$#" -lt 1 ]; then
     usage; exit 1
@@ -60,7 +62,8 @@ fi
 
 # ensure user is inside git repository
 if [ ! -e "$base" ]; then
-    exit 1
+    # fail the test with a git message
+    git status
 fi
 
 source "$scriptdir/git-xfer-utils"

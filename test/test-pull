@@ -6,6 +6,7 @@
 # ------------------------------------------------
 
 # push
+cd "$REMOTE_SANDBOX"
 create add-test
 create add-test\ with\ space
 create space\ dir/add-test\ with\ space
@@ -13,13 +14,15 @@ git xfer add add-test
 git xfer add add-test\ with\ space
 git xfer add space\ dir/add-test\ with\ space
 assertEqual 3 `git xfer list | wc -l`
-assertEqual 3 `git xfer diff testserver 2>/dev/null | grep '<' | wc -l`
-assertEqual 0 `git xfer diff testserver 2>/dev/null | grep '>' | wc -l`
-git xfer push testserver &>/dev/null
-cd "$REMOTE_SANDBOX"
+cd "$SANDBOX"
+git xfer list
+assertEqual 0 `git xfer list | wc -l`
+assertEqual 0 `git xfer diff testserver 2>/dev/null | grep '<' | wc -l`
+assertEqual 3 `git xfer diff testserver 2>/dev/null | grep '>' | wc -l`
+git xfer pull testserver &>/dev/null
 assertExists "add-test"
-assertContains "$REMOTE_CACHE" "add-test"
+assertContains "$CACHE" "add-test"
 assertExists "add-test with space"
-assertContains "$REMOTE_CACHE" "add-test with space"
+assertContains "$CACHE" "add-test with space"
 assertExists "space dir/add-test with space"
-assertContains "$REMOTE_CACHE" "space dir/add-test with space"
+assertContains "$CACHE" "space dir/add-test with space"

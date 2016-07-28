@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# push functionality of git-xfer plugin
+# sync functionality of git-xfer plugin
 # 
 # @author <bprinty@gmail.com>
 # ------------------------------------------------
@@ -9,80 +9,68 @@
 # meta
 # ----
 usage() {
-    echo "usage: git xfer sync [options] <remote> <branch>"
+    echo "usage: git xfer sync [options] <remote>"
+    echo ""
+    echo "Options:"
+    echo "  -h | --help              Show help and exit."
+    echo "  -p | --port              Explicitly set port for remote."
 }
 
 
 # exec
 # ----
-main() {
-    if [ "$#" -lt 2 ]; then
+xrun() {
+
+    if [ "$#" -lt 1 ]; then
         usage; exit 1
     fi
 
-    case $1 in
+    case "$1" in
         "-h"|"--help")
             usage; exit 0
             ;;
-    esac
-
-    case "$1" in
         "-p"|"--port")
-            port="$2";
+            port="$1": shift
             ;;
     esac
-
-    dest="$1"
-    branch="$2"
-
+    
     # verify remote
+    dest="$1"
     remote=`git remote -v | grep "$dest" | awk '{ print $2 }' | uniq | sed 's/\.git$//'`
     if [ ! "$remote" ]; then
         echo 'cannot find remote -- try git remote add <remote> <url>'
     fi
 
-    # handle ssh url type
-    if [ `echo "$remote" | grep 'ssh://'` ]; then
-        urlstring=`echo "$remote" | sed 's|ssh://||' | sed 's|:|  |' | sed 's|/|  /|'`
-        url=`echo "$urlstring" | awk '{ print $1 }'`
-        if [ ! `echo "$urlstring" | awk '{ print $3 }'` ]; then
-            port="22"
-            repo=`echo "$urlstring" | awk '{ print $2 }'`
-        else
-            port=`echo "$urlstring" | awk '{ print $2 }'`
-            repo=`echo "$urlstring" | awk '{ print $3 }'`
-        fi
+    # initialize cache folder
+    mkdir -p "$cachedb"
+    touch "$cachedb/cache-$dest"
 
-    # don't allow operations to github (they have git-lfs)
-    elif [ `echo "$remote" | grep 'github.com'` ]; then
-        echo 'Syncing with GitHub is not supported!'
-        exit 1
-
-    # ssh specification without port
-    elif [ `echo "$remote" | grep '@' | grep ':'` ]; then
-        url=`echo "$remote" | sed 's|:|  |' | awk '{ print $1 }'`
-        port="22"
-        repo=`echo "$remote" | sed 's|:|  |' | awk '{ print $2 }'`
-    
-    # local repo
-    else
-        repo="$remote"
-    fi
-    
-    # local sync
-    remotecache="$base/.git/xfer/cache-$dest"
+    # update remote
     if [ -z $port ]; then
-        cd "$repo"
-        git checkout "$branch"
-        git pull origin "$branch"
-        git xfer list > "$remotecache"
+        port=`xremoteport "$remote"`
+    fi
+    url=`xremoteurl "$remote"`
+    repo=`xremoterepo "$remote"`
+    branch=`git branch | grep '* '| sed 's/\* //g'`
+    rcache=`echo "$cache" | sed "s|$base|$repo|g"`
+    >&2 echo "Syncing remote repo..."
+    if [ "$url" ]; then
+        echo 'in'
+        # ssh -p $port "$url" << EOF
+        #     git checkout "$branch" && git pull
+        #     echo 'done with git'
+        #     if [ -e .xfer ]; then
+        #         cat .xfer
+        #     fi
+        # EOF | sed '1,/done with git/d' > "$cachedb/cache-$dest"
     else
-        ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git xfer list;" > "$remotecache"
-        ssh -q -p $port -o StrictHostKeyChecking=no "$url" "cd $repo; git checkout $branch; git pull origin $branch"
+        pushd "$repo" &>/dev/null
+        git checkout "$branch" && git pull
+        if [ -e "$rcache" ]; then
+            cat "$rcache" > "$cachedb/cache-$dest"
+        fi
+        popd 2>&1 1>/dev/null
     fi
 
+    exit 0
 }
-
-base=`git rev-parse --show-toplevel`
-cache="$base/.git/xfer/cache"
-main "$@"

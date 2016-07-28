@@ -33,6 +33,7 @@ usage() {
 
 clean() {
     git remote rm testserver
+    git xfer reset testserver
     rm -rf "$SANDBOX"
     rm -rf "$REPO"
     rm -rf "$CACHE"
@@ -120,11 +121,13 @@ if [ ! -z $2 ]; then
 fi
 source "$CONFIG"
 REMOTE_SANDBOX=`echo $SANDBOX | sed "s|$BASE|$REPO|g"`
+REMOTE_CACHE=`echo $CACHE | sed "s|$BASE|$REPO|g"`
 
 if [ -e "$CWD/test-$1" ]; then
     git remote add testserver "$REMOTE"
-    mkdir -p "$REPO"
-    cp -rf "$BASE/../git-xfer" "$REPO"
+    rm -rf "$REPO"
+    cp -rf "$BASE" "$REPO"
+    cp -rf "$BASE/.git" "$REPO/.git"
     mkdir -p "$SANDBOX" "$REMOTE_SANDBOX"
     pushd "$SANDBOX" 2>&1 1>/dev/null
     printf "$1 ........................... "

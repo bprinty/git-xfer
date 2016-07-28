@@ -9,103 +9,62 @@
 # meta
 # ----
 usage() {
-    echo "usage: git xfer pull [options] <remote>"
+    echo "usage: git xfer push [options] <remote>"
     echo ""
     echo "Options:"
     echo "  -h | --help              Show help and exit."
-    echo "  -f | --force             Copy over existing files."
     echo "  -p | --port              Explicitly set port for remote."
 }
 
 
 # exec
 # ----
-main() {
+xrun() {
+
     if [ "$#" -lt 1 ]; then
         usage; exit 1
     fi
 
-    FORCE='FALSE'
     case "$1" in
         "-h"|"--help")
             usage; exit 0
             ;;
-	"-f"|"--force")
-	    FORCE='TRUE'; shift;
-	    ;;
         "-p"|"--port")
-            port="$2"; shift; shift
+            port="$1": shift
             ;;
     esac
-
-    local dest="$1"
-
+    
     # verify remote
+    dest="$1"
     remote=`git remote -v | grep "$dest" | awk '{ print $2 }' | uniq | sed 's/\.git$//'`
     if [ ! "$remote" ]; then
         echo 'cannot find remote -- try git remote add <remote> <url>'
     fi
 
-    # handle ssh url type
-    if [ `echo "$remote" | grep 'ssh://'` ]; then
-        urlstring=`echo "$remote" | sed 's|ssh://||' | sed 's|:|  |' | sed 's|/|  /|'`
-        url=`echo "$urlstring" | awk '{ print $1 }'`
-        if [ ! `echo "$urlstring" | awk '{ print $3 }'` ]; then
-            port="22"
-            repo=`echo "$urlstring" | awk '{ print $2 }'`
-        else
-            port=`echo "$urlstring" | awk '{ print $2 }'`
-            repo=`echo "$urlstring" | awk '{ print $3 }'`
-        fi
-
-    # don't allow operations to github (they have git-lfs)
-    elif [ `echo "$remote" | grep 'github.com'` ]; then
-        echo 'Syncing with GitHub is not supported!'
-        exit 1
-
-    # ssh specification without port
-    elif [ `echo "$remote" | grep '@' | grep ':'` ]; then
-        url=`echo "$remote" | sed 's|:|  |' | awk '{ print $1 }'`
-        port="22"
-        repo=`echo "$remote" | sed 's|:|  |' | awk '{ print $2 }'`
-    
-    # local repo
-    else
-        repo="$remote"
-    fi
-    git xfer sync "$dest" "$branch"
-
-    # do the copying
-    cd "$base"
-    OLDIFS=$IFS;
-    IFS="$(printf '\n\t')"
+    # update remote
     if [ -z $port ]; then
-        # local repo
-        for file in `git xfer diff $dest | grep '>' | sed 's/> .*  //g'`; do
-            file=`echo "$file" | sed 's/\\\ /\ /g'`
-            if [ ! -e "$file" -o "$FORCE" = "TRUE" ]; then
-                mkdir -p `dirname "$file"`
-                cp "$repo/$file" "$file"
-		git xfer add --no-ignore "$file"
-            fi
-        done
-    else
-        # remote repo
-        for file in `git xfer diff $dest | grep '>' | sed 's/> .*  //g'`; do
-            file=`echo "$file" | sed 's/\\\ / /g'`
-            sshfile=`echo "$file" | sed 's/ /\\\ /g'`
-            if [ ! -e "$file" -o "$FORCE" = "TRUE" ]; then
-                mkdir -p `dirname "$file"`
-                scp -P $port $url:"$repo/$sshfile" "$file"
-                git xfer add --no-ignore "$file"
-	    fi
-        done
+        port=`xremoteport "$remote"`
     fi
-    IFS=$OLDIFS
+    url=`xremoteurl "$remote"`
+    repo=`xremoterepo "$remote"`
+    branch=`git branch | grep '* '| sed 's/\* //g'`
+    arbase=".git-xfer-archive-list.$$"
+    "$scriptdir/git-xfer" diff "$dest" | grep '>' | sed 's|> ||g' > "$arbase.txt"
+    if [ "$url" ]; then
+        echo 'in!'
+    else
+        cp "$arbase.txt" "$repo/"
+        cd "$repo"
+        "$scriptdir/git-xfer" archive "$arbase" "$arbase.txt"
+        cp "$arbase.tar.gz" "$arbase.txt" "$base/"
+        rm -rf "$arbase.tar.gz" "$arbase.txt"
+        cd "$base"
+        tar xzf "$arbase.tar.gz"
+        cat "$arbase.txt" >> "$cache.lck"
+        sort "$cache.lck" | uniq >> "$cache"
+        rm -f "$arbase.tar.gz" "$arbase.txt" "$cache.lck"
+    fi
+    rm -f "$arbase.tar.gz" "$arbase.txt"
 
     exit 0
 }
-
-base=`git rev-parse --show-toplevel`
-cache=$base/.git/xfer/cache
-main "$@"

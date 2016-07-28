@@ -34,7 +34,7 @@ xrun() {
     fi
 
     if [ ! -e "$cache" ]; then
-       echo ''; exit 0
+       exit 0
     fi
 
     cat "$cache"

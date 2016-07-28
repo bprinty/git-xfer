@@ -48,16 +48,23 @@ xrun() {
     url=`xremoteurl "$remote"`
     repo=`xremoterepo "$remote"`
     branch=`git branch | grep '* '| sed 's/\* //g'`
+    arbase=".git-xfer-archive-list.$$"
+    rcache=`echo "$cache" | sed "s|$base|$repo|g"`
+    cd "$base"
+    "$scriptdir/git-xfer" diff "$dest" | grep '<' | sed 's|< ||g' > "$arbase.txt"
+    "$scriptdir/git-xfer" archive "$arbase" "$arbase.txt"
     if [ "$url" ]; then
         echo 'in!'
     else
-        pushd "$repo" 2>&1 1>/dev/null
-        git checkout "$branch"
-        git pull
-        popd 2>&1 1>/dev/null
+        cp "$arbase.tar.gz" "$arbase.txt" "$repo/"
+        cd "$repo"
+        tar xzf "$arbase.tar.gz"
+        cat "$arbase.txt" >> "$rcache.lck"
+        sort "$rcache.lck" | uniq >> "$rcache"
+        rm -f "$arbase.tar.gz" "$arbase.txt"
+        cd "$base"
     fi
-    # git xfer sync "$dest" "$branch"
-
+    rm -f "$arbase.tar.gz" "$arbase.txt"
 
     exit 0
 }

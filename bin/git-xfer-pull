@@ -65,9 +65,10 @@ xrun() {
     fi
     cd "$base"
     tar xzf "$arbase.tar.gz"
-    cat "$arbase.txt" >> "$cache.lck"
-    sort "$cache.lck" | uniq >> "$cache"
-    rm -f "$arbase.tar.gz" "$arbase.txt" "$cache.lck"
+    cat "$arbase.txt" >> "$cache"
+    sort "$cache" | uniq >> "$cache.lck"
+    mv "$cache.lck" "$cache"
+    rm -f "$arbase.tar.gz" "$arbase.txt"
 
     exit 0
 }

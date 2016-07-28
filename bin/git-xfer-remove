@@ -23,9 +23,11 @@ remove(){
         rm "$1"
     fi
     fname=`xescape "$1"`
-    grep -v "$fname" "$cache" > "$cache.lck"
+    if [ -e "$cache" ]; then
+        grep -v "$fname" "$cache" > "$cache.lck"
+        mv "$cache.lck" "$cache"
+    fi
     grep -v "$fname" "$exclude" > "$exclude.lck"
-    mv "$cache.lck" "$cache"
     mv "$exclude.lck" "$exclude"
 }
 

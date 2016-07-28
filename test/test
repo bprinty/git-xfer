@@ -10,7 +10,7 @@
 # ----
 CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BASE=`git rev-parse --show-toplevel`
-CACHE="$BASE/.xfer"
+CACHE="$BASE/.git/xfer/cache"
 SANDBOX="$CWD/sandbox"
 CONFIG="$CWD/config/local"
 ERRORS=""

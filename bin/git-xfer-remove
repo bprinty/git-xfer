@@ -53,9 +53,9 @@ xrun() {
         fi
         if [ -d "$fullpath" ]; then
             if [ $delete ]; then
-                find "$fullpath" -type f -exec git xfer rm {} \;
+                find "$fullpath" -type f -exec "$scriptdir/git-xfer" rm {} \;
             else
-                find "$fullpath" -type f -exec git xfer remove {} \;
+                find "$fullpath" -type f -exec "$scriptdir/git-xfer" remove {} \;
             fi
         else
             remove "$fullpath"

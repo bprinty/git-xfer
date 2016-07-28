@@ -89,7 +89,7 @@ xremoteurl() {
 # exec
 # ----
 base=`git rev-parse --show-toplevel`
-cache="$base/.xfer"
+cache="$base/.git/xfer/cache"
 exclude="$base/.git/info/exclude"
 cachedb="$base/.git/xfer"
 
@@ -123,5 +123,6 @@ if [ ! -e "$base" ]; then
     git status
 fi
 
+mkdir -p "$base/.git/xfer"
 source "$scriptdir/git-xfer-$subcommand"
 xrun "$@"

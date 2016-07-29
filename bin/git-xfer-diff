@@ -53,7 +53,6 @@ xrun() {
     if [ -e "$cache" ]; then
         diff "$cache" "$cachedb/cache-$dest" | grep '[><]'
     else
-        echo 'ahh'
         cat "$cachedb/cache-$dest" | sed 's/^/> /g'
     fi
 

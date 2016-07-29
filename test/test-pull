@@ -25,3 +25,16 @@ assertExists "add-test with space"
 assertContains "$CACHE" "add-test with space"
 assertExists "space dir/add-test with space"
 assertContains "$CACHE" "space dir/add-test with space"
+
+# more
+cd "$REMOTE_SANDBOX"
+create add-test-two
+git xfer add add-test-two
+assertEqual 4 `git xfer list | wc -l`
+cd "$SANDBOX"
+assertEqual 3 `git xfer list | wc -l`
+assertEqual 0 `git xfer diff testserver 2>/dev/null | grep '<' | wc -l`
+assertEqual 1 `git xfer diff testserver 2>/dev/null | grep '>' | wc -l`
+git xfer pull testserver &>/dev/null
+assertExists "add-test-two"
+assertContains "$CACHE" "add-test-two"

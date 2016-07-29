@@ -13,6 +13,7 @@ usage() {
     echo ""
     echo "Options:"
     echo "  -h | --help              Show help and exit."
+    echo "  -f | --list              Input argument is list of files."
 }
 
 
@@ -37,22 +38,32 @@ xrun() {
         "-h"|"--help")
             usage; exit 0
             ;;
+        "-f"|"--list")
+            LIST='TRUE'; shift
+            ;;
     esac
 
-    touch "$cache"
     OLDIFS=$IFS;
     IFS="$(printf '\n\t')"
-    for i in "$@"; do
-        if [ "$i" = "." ]; then
-            fullpath="`pwd`"
-        else
+    if [ -z $LIST ]; then
+        touch "$cache"
+        for i in "$@"; do
+            if [ "$i" = "." ]; then
+                fullpath="`pwd`"
+            else
+                fullpath=$(cd "$(dirname $i)" && pwd -P)/$(basename "$i")
+            fi
+            if [ -d "$fullpath" ]; then
+                find "$fullpath" -type f -exec "$scriptdir/git-xfer" add {} \;
+            else
+                add "$fullpath"
+            fi
+        done
+    else
+        for i in `cat "$1"`; do
             fullpath=$(cd "$(dirname $i)" && pwd -P)/$(basename "$i")
-        fi
-        if [ -d "$fullpath" ]; then
-            find "$fullpath" -type f -exec "$scriptdir/git-xfer" add {} \;
-        else
             add "$fullpath"
-        fi
-    done
+        done
+    fi
     IFS=$OLDIFS
 }

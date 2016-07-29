@@ -65,9 +65,7 @@ xrun() {
     fi
     cd "$base"
     tar xzf "$arbase.tar.gz"
-    cat "$arbase.txt" >> "$cache"
-    sort "$cache" | uniq >> "$cache.lck"
-    mv "$cache.lck" "$cache"
+    "$scriptdir/git-xfer" add -f "$arbase.txt"
     rm -f "$arbase.tar.gz" "$arbase.txt"
 
     exit 0

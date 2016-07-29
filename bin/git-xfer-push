@@ -56,9 +56,7 @@ xrun() {
     cat << EOF > "$arbase.sh"
 #!/bin/bash
 tar xvf "$arbase.tar.gz"
-cat "$arbase.txt" >> "$rcache"
-sort "$rcache" | uniq >> "$rcache.lck"
-mv "$rcache.lck" "$rcache"
+git xfer add -f "$arbase.txt"
 rm -f "$arbase.tar.gz" "$arbase.txt" "$arbase.sh"
 EOF
     >&2 echo "Transferring files..."

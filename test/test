@@ -33,7 +33,7 @@ usage() {
 
 clean() {
     git remote rm testserver
-    git xfer reset testserver
+    git xfer reset -f
     rm -rf "$SANDBOX"
     rm -rf "$REPO"
     rm -rf "$CACHE"

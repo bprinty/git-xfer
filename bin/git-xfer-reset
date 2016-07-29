@@ -8,10 +8,11 @@
 # meta
 # ----
 usage() {
-    echo "usage: git xfer reset [options] <remote>"
+    echo "usage: git xfer reset [options] [<remote>]"
     echo ""
     echo "Options:"
     echo "  -h | --help              Show help and exit."
+    echo "  -f | --force             Force hard reset of anything git-xfer related."
 }
 
 
@@ -26,8 +27,15 @@ xrun() {
         "-h"|"--help")
             usage; exit 0
             ;;
+        "-f"|"--force")
+            force='TRUE'; shift
+            ;;
     esac
 
-    dest="$1"
-    rm -f "$cachedb/cache-$dest"
+    if [ -z "$force" ]; then
+        dest="$1"
+        rm -f "$cachedb/cache-$dest"
+    else
+        rm -rf "$base/.git/xfer"
+    fi
 }

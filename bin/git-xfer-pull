@@ -51,6 +51,11 @@ xrun() {
     arbase=".git-xfer-archive-list.$$"
     cd "$base"
     "$scriptdir/git-xfer" diff "$dest" | grep '>' | sed 's|> ||g' > "$arbase.txt"
+    if [ `cat "$arbase.txt" | wc -l` -eq 0 ]; then
+        rm "$arbase.txt"
+        >&2 echo "Nothing to pull ..."
+        exit 0
+    fi
     if [ "$url" ]; then
         scp -P $port "$arbase.txt" "$url:$repo/"
         ssh -p $port "$url" "cd \"$repo\" && git xfer archive $arbase $arbase.txt && rm $arbase.txt"

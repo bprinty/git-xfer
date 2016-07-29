@@ -39,6 +39,7 @@ xrun() {
     remote=`git remote -v | grep "$dest" | awk '{ print $2 }' | uniq | sed 's/\.git$//'`
     if [ ! "$remote" ]; then
         echo 'cannot find remote -- try git remote add <remote> <url>'
+        exit 1
     fi
 
     # initialize cache folder

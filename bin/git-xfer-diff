@@ -48,7 +48,7 @@ xrun() {
     url=`xremoteurl "$remote"`
     repo=`xremoterepo "$remote"`
     branch=`git branch | grep '* '| sed 's/\* //g'`
-    "$scriptdir/git-xfer" sync "$dest"
+    "$scriptdir/git-xfer" sync "$dest" || exit 1
     touch "$cachedb/cache-$dest"
     if [ -e "$cache" ]; then
         diff "$cache" "$cachedb/cache-$dest" | grep '[><]'

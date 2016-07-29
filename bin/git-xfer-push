@@ -52,6 +52,11 @@ xrun() {
     rcache=`echo "$cache" | sed "s|$base|$repo|g"`
     cd "$base"
     "$scriptdir/git-xfer" diff "$dest" | grep '<' | sed 's|< ||g' > "$arbase.txt"
+    if [ `cat "$arbase.txt" | wc -l` -eq 0 ]; then
+        rm "$arbase.txt"
+        >&2 echo "Nothing to push ..."
+        exit 0
+    fi
     "$scriptdir/git-xfer" archive "$arbase" "$arbase.txt"
     cat << EOF > "$arbase.sh"
 #!/bin/bash

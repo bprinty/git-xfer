@@ -55,16 +55,19 @@ xrun() {
     rcache=`echo "$cache" | sed "s|$base|$repo|g"`
     >&2 echo "Syncing remote repo..."
     if [ "$url" ]; then
-        ssh -p $port "$url" "cd "$repo" && git checkout "$branch" && git pull"
-        scp -P $port "$url:$rcache" "$cachedb/cache-$dest"
+        ssh -p $port "$url" "cd \"$repo\" && git checkout \"$branch\" && git pull && touch \"$rcache\""
+        scp -P $port "$url:\"$rcache\"" "$cachedb/cache-$dest"
     else
         pushd "$repo" &>/dev/null
         git checkout "$branch" && git pull
-        if [ -e "$rcache" ]; then
-            cat "$rcache" > "$cachedb/cache-$dest"
-        fi
+        touch "$rcache"
+        cat "$rcache" > "$cachedb/cache-$dest"
         popd 2>&1 1>/dev/null
     fi
+
+    # re-sorting to account for different system sorting algorithms
+    sort "$cachedb/cache-$dest" | uniq > "$cachedb/cache-$dest.lck"
+    mv "$cachedb/cache-$dest.lck" "$cachedb/cache-$dest"
 
     exit 0
 }

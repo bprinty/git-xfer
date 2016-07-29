@@ -61,7 +61,7 @@ rm -f "$arbase.tar.gz" "$arbase.txt" "$arbase.sh"
 EOF
     >&2 echo "Transferring files..."
     if [ "$url" ]; then
-        scp -P $port "$arbase.tar.gz" "$arbase.txt" "$arbase.sh" $url:$repo/ &>/dev/null
+        scp -P $port "$arbase.tar.gz" "$arbase.txt" "$arbase.sh" "$url":"$repo/" &>/dev/null
         ssh -p $port $url "cd $repo && sh $arbase.sh"
     else
         cp "$arbase.tar.gz" "$arbase.txt" "$arbase.sh" "$repo/"

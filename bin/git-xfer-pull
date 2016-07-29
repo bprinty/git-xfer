@@ -53,9 +53,9 @@ xrun() {
     "$scriptdir/git-xfer" diff "$dest" | grep '>' | sed 's|> ||g' > "$arbase.txt"
     if [ "$url" ]; then
         scp -P $port "$arbase.txt" "$url:$repo/"
-        ssh -p $port "$url" "cd $repo && git xfer archive $arbase $arbase.txt && rm $arbase.txt"
-        scp -P $port "$url:$repo/$arbase.tar.gz" "$arbase.tar.gz"
-        ssh -p $port "$url" "cd $repo && rm $arbase.tar.gz"
+        ssh -p $port "$url" "cd \"$repo\" && git xfer archive $arbase $arbase.txt && rm $arbase.txt"
+        scp -P $port "$url":"$repo/$arbase.tar.gz" "$arbase.tar.gz"
+        ssh -p $port "$url" "cd \"$repo\" && rm $arbase.tar.gz"
     else
         cp "$arbase.txt" "$repo/"
         cd "$repo"

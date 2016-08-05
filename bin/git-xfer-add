@@ -52,7 +52,9 @@ xrun() {
             if [ -d "$fullpath" ]; then
                 find "$fullpath" -type f -exec "$scriptdir/git-xfer" add {} \;
             else
-                add "$fullpath"
+                if [ -e "$fullpath" ]; then
+                    add "$fullpath"
+                fi
             fi
         done
     else

@@ -23,10 +23,6 @@ add(){
     fname=`xescape "$1"`
     echo "$fname" >> "$cache"
     echo "$fname" >> "$exclude"
-    sort "$cache" | uniq > "$cache.lck"
-    mv "$cache.lck" "$cache"
-    sort "$exclude" | uniq > "$exclude.lck"
-    mv "$exclude.lck" "$exclude"
 }
 
 xrun() {
@@ -65,5 +61,9 @@ xrun() {
             add "$fullpath"
         done
     fi
+    sort "$cache" | uniq > "$cache.lck"
+    mv "$cache.lck" "$cache"
+    sort "$exclude" | uniq > "$exclude.lck"
+    mv "$exclude.lck" "$exclude"
     IFS=$OLDIFS
 }

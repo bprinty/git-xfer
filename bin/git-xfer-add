@@ -60,7 +60,9 @@ xrun() {
     else
         for i in `cat "$1"`; do
             fullpath=$(cd "$(dirname $i)" && pwd -P)/$(basename "$i")
-            add "$fullpath"
+            if [ -e "$fullpath" ]; then
+                add "$fullpath"
+            fi
         done
     fi
     sort "$cache" | uniq > "$cache.lck"

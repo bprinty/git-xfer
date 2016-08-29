@@ -88,7 +88,7 @@ xremoteurl() {
 
 # exec
 # ----
-base=`git rev-parse --show-toplevel`
+base=`git rev-parse --show-toplevel 2>/dev/null`
 cache="$base/.git/xfer/cache"
 exclude="$base/.git/info/exclude"
 cachedb="$base/.git/xfer"

@@ -1,5 +1,0 @@
-#!/bin/bash
-
-PORT=2222
-REPO="/tmp/git-xfer-testing-local/git-xfer"
-REMOTE="ssh://$USER@localhost:$PORT$REPO.git"

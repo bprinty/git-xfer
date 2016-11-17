@@ -1,4 +1,0 @@
-#!/bin/bash
-
-REPO="/tmp/git-xfer-testing-local/git-xfer"
-REMOTE=$REPO

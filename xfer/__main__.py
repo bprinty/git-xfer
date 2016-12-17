@@ -32,7 +32,7 @@ parser_version.set_defaults(func=lambda x: sys.stderr.write(__version__ + '\n'))
 # config
 # ------
 parser_config = subparsers.add_parser('config')
-parser_config.add_argument('type', help='Type of remote to configure.')
+parser_config.add_argument('type', nargs='?', help='Type of remote to configure.', default='ssh')
 parser_config.set_defaults(func=cli.config)
 
 
@@ -41,6 +41,13 @@ parser_config.set_defaults(func=cli.config)
 parser_add = subparsers.add_parser('add')
 parser_add.add_argument('files', nargs='+', help='Files to add for tracking.')
 parser_add.set_defaults(func=cli.add)
+
+
+# list
+# ----
+parser_list = subparsers.add_parser('list')
+parser_list.add_argument('remote', nargs='?', help='Files to add for tracking.', default='local')
+parser_list.set_defaults(func=cli.list)
 
 
 # prune
@@ -58,6 +65,7 @@ parser_reset.set_defaults(func=cli.reset)
 # remove
 # ------
 parser_remove = subparsers.add_parser('remove')
+parser_remove.add_argument('-d', '--delete', action='store_true', help='Delete files from filesystem in addition to removing them from xfer tracking.', default=False)
 parser_remove.add_argument('files', nargs='+', help='Files to remove from tracking.')
 parser_remove.set_defaults(func=cli.remove)
 

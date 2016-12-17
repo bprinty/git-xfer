@@ -10,33 +10,172 @@
 # -------
 import re
 import os
+import sys
 import getpass
+import subprocess
+import paramiko
+from ConfigParser import SafeConfigParser
 from gems import filetree
+
+
+# decorators
+# ----------
+def local_context(func):
+    def decorator(args):
+        # configure directories
+        args.base = run('git rev-parse --show-toplevel')
+        if 'fatal: Not a git repository' in args.base:
+            sys.exit(args.base + '\n')
+        args.home = os.path.expanduser('~')
+        
+        # set up remote list
+        args.remotes = {}
+        for line in run('git remote -v').split('\n'):
+            if line != '':
+                arr = line.split('\t')
+                args.remotes[arr[0]] = re.sub(" (.*)$", "", arr[1])
+        
+        # set up data directory
+        args.config = os.path.join(args.base, '.git', 'xfer')
+        if not os.path.exists(args.config):
+            open(args.config, 'a').close()
+        
+        # read configs for each remote
+        args.cache = []
+        with open(args.config, 'r') as fi:
+            args.cache = map(lambda x: x.rstrip(), fi.readlines())
+        
+        # run entry point
+        args.update = False
+        ret = func(args)
+
+        # update configs that need to be updated
+        if args.update:
+            with open(args.config, 'w') as fo:
+                fo.write('\n'.join(sorted(args.cache)))
+        return ret
+    return decorator
+
+
+def remote_context(func):
+    def decorator(args):
+        if args.remotes.get(args.remote) is None:
+            sys.exit('Remote does not exist!')
+
+        url = args.remotes[args.remote]
+        args.type = url.split(':')[0]
+        if args.type == 'ssh':
+            m = re.match(r"ssh://(.+)@(.+):(\d+)(.+).git", url)
+            if not m:
+                sys.exit('Could not parse remote url.\nThe format should be: ssh://<user>@<host>:<port><path>')
+            user, server, port, args.remote_base = m.groups()
+
+            # connect via ssh
+            args.ssh = paramiko.SSHClient()
+            args.ssh.load_system_host_keys()
+            try:
+                args.ssh.connect(server, username=user, port=int(port))
+            except paramiko.AuthenticationException:
+                password = getpass.getpass(prompt='Password: ', stream=None)
+                args.ssh.connect(server, username=user, password=password, port=int(port))
+            args.sftp = args.ssh.open_sftp()
+
+            # make sure remote exists and sync cache
+            ensure_remote(args.sftp, os.path.join(args.remote_base, '.git', 'xfer'))
+
+            # read remote cache
+            args.remote_cache = []
+            args.remote_update = False
+            try:
+                with args.sftp.open(os.path.join(args.remote_base, '.git', 'xfer'), 'r') as fi:
+                    args.remote_cache = map(lambda x: x.rstrip(), fi.readlines())
+            except IOError:
+                pass
+        else:
+            raise NotImplementedError('Remote type {} not currently supported!'.format(args.type))
+
+        # run entry point
+        ret = func(args)
+
+        if args.type == 'ssh':
+            # update remote cache
+            if args.remote_update:
+                try:
+                    with args.sftp.open(os.path.join(args.remote_base, '.git', 'xfer'), 'w') as fo:
+                        fo.write('\t'.join(args.remote_cache))
+                except IOError:
+                    pass
+
+            # close connection
+            args.sftp.close()
+            args.ssh.close()
+        return ret
+    return decorator
 
 
 # methods
 # -------
+def run(cmd):
+    return subprocess.check_output(cmd, shell=True).rstrip()
+
+
+def call(cmd):
+    ret = subprocess.check_call(cmd, shell=True)
+    if ret != 0:
+        sys.exit('Something went wrong running "{}".'.format(cmd))
+    return
+
+
+def ensure_remote(sftp, path):
+    path = os.path.dirname(path).replace('\\', '/')
+    for comp in path.split('/')[1:]:
+        try:
+            sftp.chdir(comp)
+        except IOError:
+            sftp.mkdir(comp)
+            sftp.chdir(comp)
+    return
+
+
+def ensure_local(path):
+    path = os.path.dirname(path)
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return
+
+
+# entry points
+# ------------
+@local_context
 def config(args):
     """
     Configure server transfer information.
     """
+    uname = getpass.getuser()
+    name = raw_input('Enter remote name (example: xfer): ') or 'xfer'
+    if name in args.remotes:
+        sys.exit('\n{} is already listed as a remote.\nPlease choose a different name or remove the remote using `git remote remove`\n'.format(name))
     if args.type == 'ssh':
-        print 'ssh'
-        uname = getpass.getuser()
-        home = os.path.expanduser('~')
-        user = raw_input('Enter remote username (default: {}): '.format(uname)) or uname
-        server = raw_input('Enter server name (example: myhost.com): ')
-        dest = raw_input('Enter remote destination for repo (default: {}): '.format(home)) or home
+        server = raw_input('Enter remote url (example: {}@localhost): '.format(uname)) or uname + '@localhost'
+        repo = os.path.join(args.home, os.path.basename(args.base))
+        dest = raw_input('Enter remote destination for repo (default: {}): '.format(repo)) or repo
+        dest = dest.replace('.git', '')
         port = raw_input('Enter port for server (default: 22): ') or 22
-        print 'ssh://{}@{}:{}{}.git'.format(user, server, port, dest)
+        remote = 'ssh://{}:{}{}.git'.format(server, port, dest)
     elif args.type == 's3':
-        print 's3'
-    elif args.type == 'gcloud':
-        print 'gcloud'
-    print 'config'
+        server = raw_input('Enter remote bucket name (example: mybucket): '.format(uname)) or uname
+        remote = 's3://{}'.format(server)
+    elif args.type == 'gs':
+        server = raw_input('Enter remote bucket name (example: mybucket): '.format(uname)) or uname
+        remote = 'gs://{}'.format(server)
+    else:
+        sys.exit('No rule for processing server type: {}'.format(args.type))
+    run('git remote add {} {}'.format(name, remote))
+    open(args.config, 'a').close()
     return
 
 
+@local_context
 def add(args):
     """
     Add files to tracking.
@@ -44,10 +183,37 @@ def add(args):
     Args:
         args (obj): Arguments from command line.
     """
-    print 'add'
+    files = []
+    for path in args.files:
+        if os.path.isdir(path):
+            ft = filetree(path)
+            files.extend(ft.filelist())
+        else:
+            files.append(path)
+    for path in files:
+        path = os.path.normpath(os.path.relpath(path, args.base))
+        if path not in args.cache:
+            args.cache.append(path)
+    args.update = True
     return
 
 
+@local_context
+def list(args):
+    """
+    List currently tracked files.
+
+    Args:
+        args (obj): Arguments from command line.
+    """
+    if args.remote == 'local':
+        sys.stdout.write('\n'.join(args.cache) + '\n')
+    else:
+        raise NotImplementedError('Remote listing not yet implemented!')
+    return
+
+
+@local_context
 def prune(args):
     """
     Prune non-existing files from tracking.
@@ -55,10 +221,18 @@ def prune(args):
     Args:
         args (obj): Arguments from command line.
     """
-    print 'prune'
+    keep = []
+    for path in args.cache:
+        if os.path.exists(path):
+            keep.append(path)
+        else:
+            sys.stderr.write('Removing: {}'.format(path) + '\n')
+    args.cache = keep
+    args.update = True
     return
 
 
+@local_context
 def reset(args):
     """
     Reset tracking information for xfer.
@@ -66,10 +240,12 @@ def reset(args):
     Args:
         args (obj): Arguments from command line.
     """
-    print 'reset'
+    if os.path.exists(args.config):
+        os.remove(args.config)
     return
 
 
+@local_context
 def remove(args):
     """
     Remove files from tracking.
@@ -77,7 +253,22 @@ def remove(args):
     Args:
         args (obj): Arguments from command line.
     """
-    print 'remove'
+    files = []
+    for path in args.files:
+        if os.path.isdir(path):
+            ft = filetree(path)
+            files.extend(ft.filelist())
+        else:
+            files.append(path)
+    keep = []
+    for path in files:
+        relpath = os.path.normpath(os.path.relpath(path, args.base))
+        if path in args.cache:
+            idx = args.cache.index(relpath)
+            del args.cache[idx]
+            if args.delete and os.path.exists(path):
+                os.remove(path)
+    args.update = True
     return
 
 
@@ -88,10 +279,12 @@ def rm(args):
     Args:
         args (obj): Arguments from command line.
     """
-    print 'rm'
+    args.delete = True
     return remove(args)
 
 
+@local_context
+@remote_context
 def diff(args):
     """
     Find difference between remote and local files.
@@ -99,10 +292,19 @@ def diff(args):
     Args:
         args (obj): Arguments from command line.
     """
-    print 'diff'
+    local = set(args.cache)
+    remote = set(args.remote_cache)
+    here = local.difference(remote)
+    for item in here:
+        sys.stdout.write('< {}'.format(item) + '\n')
+    there = remote.difference(local)
+    for item in there:
+        sys.stdout.write('> {}'.format(item) + '\n')
     return
 
 
+@local_context
+@remote_context
 def push(args):
     """
     Push files to remote server.
@@ -110,10 +312,27 @@ def push(args):
     Args:
         args (obj): Arguments from command line.
     """
-    print 'push'
+    if args.type == 'ssh':
+        local = set(args.cache)
+        remote = set(args.remote_cache)
+        here = local.difference(remote)
+        for path in here:
+            ensure_remote(args.sftp, os.path.join(args.remote_base, path))
+            args.sftp.put(
+                os.path.join(args.base, path),
+                os.path.join(args.remote_base, path)
+            )
+            args.remote_cache.append(path)
+            args.remote_update = True
+    elif args.type == 's3':
+        raise NotImplementedError('s3:// remote type not yet supported!')
+    elif args.type == 'gs':
+        raise NotImplementedError('gs:// remote type not yet supported!')
     return
 
 
+@local_context
+@remote_context
 def pull(args):
     """
     Pull files from remote server.
@@ -121,6 +340,16 @@ def pull(args):
     Args:
         args (obj): Arguments from command line.
     """
-    print 'pull'
+    local = set(args.cache)
+    remote = set(args.remote_cache)
+    there = remote.difference(local)
+    for path in there:
+        ensure_local(os.path.join(args.base, path))
+        args.sftp.get(
+            os.path.join(args.remote_base, path),
+            os.path.join(args.base, path)
+        )
+        args.cache.append(path)
+        args.update = True
     return
 

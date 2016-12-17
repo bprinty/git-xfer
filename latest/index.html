@@ -1,0 +1,275 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>git-xfer &mdash; xfer 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="xfer 0.2.0 documentation" href="#"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> xfer
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">git-xfer</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#questions-feedback">Questions/Feedback</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="#">xfer</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="#">Docs</a> &raquo;</li>
+      
+    <li>git-xfer</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="git-xfer">
+<h1>git-xfer<a class="headerlink" href="#git-xfer" title="Permalink to this headline">¶</a></h1>
+<p>Git plugin for transferring large files across servers.</p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Clone the repo and install with pip or setuptools:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git clone git@github.com:bprinty/git-xfer.git
+pip install .
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>To add a remote server that can be used by <code class="docutils literal"><span class="pre">git-xfer</span></code>, either use the <code class="docutils literal"><span class="pre">config</span></code> subcommand:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git xfer config <span class="o">[</span>&lt;type&gt;<span class="o">]</span>
+</pre></div>
+</div>
+<p>Or manually add the server as a git remote:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git remote add &lt;name&gt; &lt;url&gt;
+
+<span class="c1"># examples:</span>
+git remote add server ssh://user@server.com:22/~/git-xfer.git
+git remote add amazon s3://mybucket/git-xfer.git
+git remote add google gs://mybucket/git-xfer.git
+</pre></div>
+</div>
+<p>Note: for remote servers using a port other than 22, please use the format above in defining the remote url. <code class="docutils literal"><span class="pre">git-xfer</span></code> uses the port specified in the url to do transfer operations.</p>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>To start tracking a file with git-xfer, use:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git xfer add &lt;file&gt;
+</pre></div>
+</div>
+<p>To remove a file from tracking with git-xfer, use:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git xfer remove &lt;file&gt;
+</pre></div>
+</div>
+<p>To delete a local file and remove it from tracking with <code class="docutils literal"><span class="pre">git-xfer</span></code>, use:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git xfer rm &lt;file&gt;
+</pre></div>
+</div>
+<p>To list all the files currently tracked by <code class="docutils literal"><span class="pre">git-xfer</span></code>, use:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git xfer list
+</pre></div>
+</div>
+<p>To list all the files currently tracked by <code class="docutils literal"><span class="pre">git-xfer</span></code> on a remote, use:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git xfer list &lt;remote&gt;
+</pre></div>
+</div>
+<p>To see the difference between locally tracked files and remotely tracked files, use:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git xfer diff &lt;remote&gt;
+</pre></div>
+</div>
+<p>To push locally tracked files to a remote server, use:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git xfer push &lt;remote&gt;
+</pre></div>
+</div>
+<p>To pull tracked files from a remote server, use:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git xfer pull &lt;remote&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="questions-feedback">
+<h2>Questions/Feedback<a class="headerlink" href="#questions-feedback" title="Permalink to this headline">¶</a></h2>
+<p>Submit an issue in the <a class="reference external" href="https://github.com/bprinty/git-xfer/issues">GitHub issue tracker</a>.</p>
+</div>
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Blake Printy.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -19,7 +19,7 @@ except ImportError:
 # requirements
 # ------------
 with open('requirements.txt', 'r') as reqs:
-    requirements = reqs.rstrip().readlines()
+    requirements = map(lambda x: x.rstrip(), reqs.readlines())
 
 test_requirements = [
     'nose',
@@ -67,5 +67,8 @@ setup(
         'Programming Language :: Python :: 3.4',
     ],
     test_suite='nose.collector',
-    tests_require=test_requirements
+    tests_require=test_requirements,
+    scripts=[
+        'bin/git-xfer'
+    ]
 )

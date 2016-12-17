@@ -274,15 +274,12 @@ def remove(args):
             files.extend(ft.filelist())
         else:
             files.append(path)
-    keep = []
     for path in files:
         relpath = os.path.normpath(os.path.relpath(path, args.base))
         if relpath in args.cache:
+            del args.cache[args.cache.index(relpath)]
             if args.delete and os.path.exists(path):
                 os.remove(path)
-        else:
-            keep.append(relpath)
-    args.cache = keep
     args.update = True
     return
 

@@ -73,15 +73,25 @@ def remote_context(func):
             # connect via ssh
             args.ssh = paramiko.SSHClient()
             args.ssh.load_system_host_keys()
+            logged_in = False
             try:
                 args.ssh.connect(server, username=user, port=int(port))
+                logged_in = True
             except paramiko.AuthenticationException:
-                password = getpass.getpass(prompt='Password: ', stream=None)
-                args.ssh.connect(server, username=user, password=password, port=int(port))
+                for n in range(0, 3):
+                    try:
+                        password = getpass.getpass(prompt='Password: ', stream=None)
+                        args.ssh.connect(server, username=user, password=password, port=int(port))
+                        logged_in = True
+                        break
+                    except paramiko.AuthenticationException:
+                        pass
+            if not logged_in:
+                sys.exit('Could not connect to remote!')
             args.sftp = args.ssh.open_sftp()
 
             # make sure remote exists and sync cache
-            ensure_remote(args.sftp, os.path.join(args.remote_base, '.git', 'xfer'))
+            ensure_remote(args.sftp, os.path.join(args.remote_base, '.git'))
 
             # read remote cache
             args.remote_cache = []
@@ -102,7 +112,7 @@ def remote_context(func):
             if args.remote_update:
                 try:
                     with args.sftp.open(os.path.join(args.remote_base, '.git', 'xfer'), 'w') as fo:
-                        fo.write('\t'.join(args.remote_cache))
+                        fo.write('\n'.join(args.remote_cache))
                 except IOError:
                     pass
 
@@ -115,30 +125,35 @@ def remote_context(func):
 
 # methods
 # -------
-def run(cmd):
-    return subprocess.check_output(cmd, shell=True).rstrip()
+def run(cmd, cwd=None):
+    return subprocess.check_output(cmd, shell=True, cwd=cwd).rstrip()
 
 
-def call(cmd):
-    ret = subprocess.check_call(cmd, shell=True)
+def call(cmd, cwd=None):
+    ret = subprocess.check_call(cmd, shell=True, cwd=cwd)
     if ret != 0:
         sys.exit('Something went wrong running "{}".'.format(cmd))
     return
 
 
 def ensure_remote(sftp, path):
-    path = os.path.dirname(path).replace('\\', '/')
-    for comp in path.split('/')[1:]:
-        try:
-            sftp.chdir(comp)
-        except IOError:
-            sftp.mkdir(comp)
-            sftp.chdir(comp)
+    if path == '/':
+        sftp.chdir('/')
+        return
+    if path == '':
+        return
+    try:
+        sftp.chdir(path)
+    except IOError:
+        dirname, basename = os.path.split(path.rstrip('/'))
+        ensure_remote(sftp, dirname)
+        sftp.mkdir(basename)
+        sftp.chdir(basename)
+        return True
     return
 
 
 def ensure_local(path):
-    path = os.path.dirname(path)
     if not os.path.exists(path):
         os.makedirs(path)
     return
@@ -171,7 +186,6 @@ def config(args):
     else:
         sys.exit('No rule for processing server type: {}'.format(args.type))
     run('git remote add {} {}'.format(name, remote))
-    open(args.config, 'a').close()
     return
 
 
@@ -263,11 +277,12 @@ def remove(args):
     keep = []
     for path in files:
         relpath = os.path.normpath(os.path.relpath(path, args.base))
-        if path in args.cache:
-            idx = args.cache.index(relpath)
-            del args.cache[idx]
+        if relpath in args.cache:
             if args.delete and os.path.exists(path):
                 os.remove(path)
+        else:
+            keep.append(relpath)
+    args.cache = keep
     args.update = True
     return
 
@@ -317,7 +332,7 @@ def push(args):
         remote = set(args.remote_cache)
         here = local.difference(remote)
         for path in here:
-            ensure_remote(args.sftp, os.path.join(args.remote_base, path))
+            ensure_remote(args.sftp, os.path.dirname(os.path.join(args.remote_base, path)))
             args.sftp.put(
                 os.path.join(args.base, path),
                 os.path.join(args.remote_base, path)
@@ -344,7 +359,7 @@ def pull(args):
     remote = set(args.remote_cache)
     there = remote.difference(local)
     for path in there:
-        ensure_local(os.path.join(args.base, path))
+        ensure_local(os.path.dirname(os.path.join(args.base, path)))
         args.sftp.get(
             os.path.join(args.remote_base, path),
             os.path.join(args.base, path)

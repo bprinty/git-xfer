@@ -23,9 +23,10 @@ from gems import filetree
 def local_context(func):
     def decorator(args):
         # configure directories
-        args.base = run('git rev-parse --show-toplevel')
-        if 'fatal: Not a git repository' in args.base:
-            sys.exit(args.base + '\n')
+        try:
+            args.base = run('git rev-parse --show-toplevel')
+        except subprocess.CalledProcessError:
+            sys.exit()
         args.home = os.path.expanduser('~')
         
         # set up remote list
@@ -221,7 +222,8 @@ def list(args):
         args (obj): Arguments from command line.
     """
     if args.remote == 'local':
-        sys.stdout.write('\n'.join(args.cache) + '\n')
+        if len(args.cache) > 0:
+            sys.stdout.write('\n'.join(args.cache) + '\n')
     else:
         raise NotImplementedError('Remote listing not yet implemented!')
     return

@@ -57,16 +57,8 @@ def local_context(func):
         if args.update:
             with open(args.config, 'w') as fo:
                 fo.write('\n'.join(sorted(args.cache)))
-
-        # update exclude file
-        if args.update:
-            excluded = args.cache
-            with open(args.exclude, 'r') as fi:
-                for ex in map(lambda x: x.rstrip(), fi.readlines()):
-                    if ex not in excluded:
-                        excluded.append(ex)
             with open(args.exclude, 'w') as fo:
-                fo.write('\n'.join(sorted(excluded)))
+                fo.write('\n'.join(sorted(args.cache)))
         return ret
     return decorator
 

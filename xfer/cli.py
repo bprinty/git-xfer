@@ -78,6 +78,7 @@ def remote_context(func):
 
             # connect via ssh
             args.ssh = paramiko.SSHClient()
+            args.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             args.ssh.load_system_host_keys()
             logged_in = False
             try:

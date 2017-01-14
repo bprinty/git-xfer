@@ -33,10 +33,7 @@ Or manually add the server as a git remote:
 
     git remote add <name> <url>
 
-    # examples:
     git remote add server ssh://user@server.com:22/~/git-xfer.git
-    git remote add amazon s3://mybucket/git-xfer.git
-    git remote add google gs://mybucket/git-xfer.git
 
 
 Note: for remote servers using a port other than 22, please use the format above in defining the remote url. ``git-xfer`` uses the port specified in the url to do transfer operations.

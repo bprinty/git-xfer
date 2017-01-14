@@ -38,8 +38,11 @@ def local_context(func):
         
         # set up data directory
         args.config = os.path.join(args.base, '.git', 'xfer')
+        args.exclude = os.path.join(args.base, '.git', 'info', 'exclude')
         if not os.path.exists(args.config):
             open(args.config, 'a').close()
+        if not os.path.exists(args.exclude):
+            open(args.exclude, 'a').close()
         
         # read configs for each remote
         args.cache = []
@@ -53,6 +56,8 @@ def local_context(func):
         # update configs that need to be updated
         if args.update:
             with open(args.config, 'w') as fo:
+                fo.write('\n'.join(sorted(args.cache)))
+            with open(args.exclude, 'w') as fo:
                 fo.write('\n'.join(sorted(args.cache)))
         return ret
     return decorator
@@ -73,6 +78,7 @@ def remote_context(func):
 
             # connect via ssh
             args.ssh = paramiko.SSHClient()
+            args.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             args.ssh.load_system_host_keys()
             logged_in = False
             try:

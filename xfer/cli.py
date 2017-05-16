@@ -15,7 +15,7 @@ import getpass
 import subprocess
 import paramiko
 from ConfigParser import SafeConfigParser
-from gems import filetree
+from gems import filetree, composite
 
 
 # decorators
@@ -37,8 +37,14 @@ def local_context(func):
                 args.remotes[arr[0]] = re.sub(" (.*)$", "", arr[1])
         
         # set up data directory
-        args.config = os.path.join(args.base, '.git', 'xfer')
-        args.exclude = os.path.join(args.base, '.git', 'info', 'exclude')
+        if os.path.isdir(os.path.join(args.base, '.git')):
+            args.gitdir = os.path.join(args.base, '.git', 'xfer')
+        else:
+            with open(os.path.join(args.base, '.git'), 'r') as fi:
+                dat = composite.load(fi)
+            args.gitdir = os.path.realpath(os.path.join(args.base, dat.gitdir))
+        args.config = os.path.join(args.gitdir, 'xfer')
+        args.exclude = os.path.join(args.gitdir, 'info', 'exclude')
         if not os.path.exists(args.config):
             open(args.config, 'a').close()
         if not os.path.exists(args.exclude):

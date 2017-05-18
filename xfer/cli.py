@@ -38,7 +38,7 @@ def local_context(func):
         
         # set up data directory
         if os.path.isdir(os.path.join(args.base, '.git')):
-            args.gitdir = os.path.join(args.base, '.git', 'xfer')
+            args.gitdir = os.path.join(args.base, '.git')
         else:
             with open(os.path.join(args.base, '.git'), 'r') as fi:
                 dat = composite.load(fi)

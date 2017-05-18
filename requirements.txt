@@ -2,3 +2,4 @@ paramiko>=2.0.0
 cryptography>=1.1
 gems>=0.1.9
 PyYAML>=3.12
+pyasn1>=0.1.7

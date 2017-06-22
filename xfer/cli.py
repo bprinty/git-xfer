@@ -77,6 +77,7 @@ def remote_context(func):
         url = args.remotes[args.remote]
         args.type = url.split(':')[0]
         if args.type == 'ssh':
+            # parse config for remote info
             m = re.match(r"ssh://(.+)@(.+):(\d+)(.+).git", url)
             if not m:
                 sys.exit('Could not parse remote url.\nThe format should be: ssh://<user>@<host>:<port><path>')
@@ -103,14 +104,23 @@ def remote_context(func):
                 sys.exit('Could not connect to remote!')
             args.sftp = args.ssh.open_sftp()
 
-            # make sure remote exists and sync cache
-            ensure_remote(args.sftp, os.path.join(args.remote_base, '.git'))
+            # configure remote
+            ensure_remote(args.sftp, args.remote_base)
+            if remote_isdir(args.sftp, os.path.join(args.remote_base, '.git')):
+                args.remote_gitdir = os.path.join(args.remote_base, '.git')
+            elif remote_exists(args.sftp, os.path.join(args.remote_base, '.git')):
+                with args.sftp.open(os.path.join(args.remote_base, '.git'), 'r') as fi:
+                    dat = composite.load(fi)
+                args.remote_gitdir = os.path.realpath(os.path.join(args.remote_base, dat.gitdir))
+            else:
+                args.remote_gitdir = os.path.join(args.remote_base, '.git')
+                ensure_remote(args.sftp, args.remote_gitdir)
 
             # read remote cache
             args.remote_cache = []
             args.remote_update = False
             try:
-                with args.sftp.open(os.path.join(args.remote_base, '.git', 'xfer'), 'r') as fi:
+                with args.sftp.open(os.path.join(args.remote_gitdir, 'xfer'), 'r') as fi:
                     args.remote_cache = map(lambda x: x.rstrip(), fi.readlines())
             except IOError:
                 pass
@@ -124,7 +134,7 @@ def remote_context(func):
             # update remote cache
             if args.remote_update:
                 try:
-                    with args.sftp.open(os.path.join(args.remote_base, '.git', 'xfer'), 'w') as fo:
+                    with args.sftp.open(os.path.join(args.remote_gitdir, 'xfer'), 'w') as fo:
                         fo.write('\n'.join(args.remote_cache))
                 except IOError:
                     pass
@@ -147,6 +157,22 @@ def call(cmd, cwd=None):
     if ret != 0:
         sys.exit('Something went wrong running "{}".'.format(cmd))
     return
+
+
+def remote_exists(sftp, path):
+    try:
+        sftp.stat(path)
+        return True
+    except (IOError, paramiko.sftp.SFTPError):
+        return False
+
+
+def remote_isdir(sftp, path):
+    try:
+        sftp.chdir(path)
+        return True
+    except (IOError, paramiko.sftp.SFTPError):
+        return False
 
 
 def ensure_remote(sftp, path):

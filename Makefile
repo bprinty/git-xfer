@@ -54,7 +54,7 @@ build: clean
 release: build tag
 	VER=$(VERSION) && git push origin :$$VER || echo 'Remote tag available'
 	VER=$(VERSION) && git push origin $$VER
-	twine upload -r $$USER --skip-existing dist/*
+	twine upload --skip-existing dist/*
 
 install: clean
 	python setup.py install

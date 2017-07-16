@@ -116,11 +116,15 @@ def remote_context(func):
                 args.remote_gitdir = os.path.join(args.remote_base, '.git')
                 ensure_remote(args.sftp, args.remote_gitdir)
 
+            # configure paths
+            args.remote_config = os.path.join(args.remote_gitdir, 'xfer')
+            args.remote_exclude = os.path.join(args.remote_gitdir, 'info', 'exclude')
+
             # read remote cache
             args.remote_cache = []
             args.remote_update = False
             try:
-                with args.sftp.open(os.path.join(args.remote_gitdir, 'xfer'), 'r') as fi:
+                with args.sftp.open(args.remote_config, 'r') as fi:
                     args.remote_cache = map(lambda x: x.rstrip(), fi.readlines())
             except IOError:
                 pass
@@ -134,7 +138,9 @@ def remote_context(func):
             # update remote cache
             if args.remote_update:
                 try:
-                    with args.sftp.open(os.path.join(args.remote_gitdir, 'xfer'), 'w') as fo:
+                    with args.sftp.open(args.remote_config, 'w') as fo:
+                        fo.write('\n'.join(args.remote_cache))
+                    with args.sftp.open(args.remote_exclude, 'w') as fo:
                         fo.write('\n'.join(args.remote_cache))
                 except IOError:
                     pass

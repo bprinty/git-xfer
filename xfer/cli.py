@@ -71,83 +71,85 @@ def local_context(func):
 
 def remote_context(func):
     def decorator(args):
-        if args.remotes.get(args.remote) is None:
-            sys.exit('Remote does not exist!')
+        if args.remote != 'local':
+            if args.remotes.get(args.remote) is None:
+                sys.exit('Remote does not exist!')
 
-        url = args.remotes[args.remote]
-        args.type = url.split(':')[0]
-        if args.type == 'ssh':
-            # parse config for remote info
-            m = re.match(r"ssh://(.+)@(.+):(\d+)(.+).git", url)
-            if not m:
-                sys.exit('Could not parse remote url.\nThe format should be: ssh://<user>@<host>:<port><path>')
-            user, server, port, args.remote_base = m.groups()
+            url = args.remotes[args.remote]
+            args.type = url.split(':')[0]
+            if args.type == 'ssh':
+                # parse config for remote info
+                m = re.match(r"ssh://(.+)@(.+):(\d+)(.+).git", url)
+                if not m:
+                    sys.exit('Could not parse remote url.\nThe format should be: ssh://<user>@<host>:<port><path>')
+                user, server, port, args.remote_base = m.groups()
 
-            # connect via ssh
-            args.ssh = paramiko.SSHClient()
-            args.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            args.ssh.load_system_host_keys()
-            logged_in = False
-            try:
-                args.ssh.connect(server, username=user, port=int(port))
-                logged_in = True
-            except paramiko.AuthenticationException:
-                for n in range(0, 3):
-                    try:
-                        password = getpass.getpass(prompt='Password: ', stream=None)
-                        args.ssh.connect(server, username=user, password=password, port=int(port))
-                        logged_in = True
-                        break
-                    except paramiko.AuthenticationException:
-                        pass
-            if not logged_in:
-                sys.exit('Could not connect to remote!')
-            args.sftp = args.ssh.open_sftp()
+                # connect via ssh
+                args.ssh = paramiko.SSHClient()
+                args.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                args.ssh.load_system_host_keys()
+                logged_in = False
+                try:
+                    args.ssh.connect(server, username=user, port=int(port))
+                    logged_in = True
+                except paramiko.AuthenticationException:
+                    for n in range(0, 3):
+                        try:
+                            password = getpass.getpass(prompt='Password: ', stream=None)
+                            args.ssh.connect(server, username=user, password=password, port=int(port))
+                            logged_in = True
+                            break
+                        except paramiko.AuthenticationException:
+                            pass
+                if not logged_in:
+                    sys.exit('Could not connect to remote!')
+                args.sftp = args.ssh.open_sftp()
 
-            # configure remote
-            ensure_remote(args.sftp, args.remote_base)
-            if remote_isdir(args.sftp, os.path.join(args.remote_base, '.git')):
-                args.remote_gitdir = os.path.join(args.remote_base, '.git')
-            elif remote_exists(args.sftp, os.path.join(args.remote_base, '.git')):
-                with args.sftp.open(os.path.join(args.remote_base, '.git'), 'r') as fi:
-                    dat = composite.load(fi)
-                args.remote_gitdir = os.path.realpath(os.path.join(args.remote_base, dat.gitdir))
+                # configure remote
+                ensure_remote(args.sftp, args.remote_base)
+                if remote_isdir(args.sftp, os.path.join(args.remote_base, '.git')):
+                    args.remote_gitdir = os.path.join(args.remote_base, '.git')
+                elif remote_exists(args.sftp, os.path.join(args.remote_base, '.git')):
+                    with args.sftp.open(os.path.join(args.remote_base, '.git'), 'r') as fi:
+                        dat = composite.load(fi)
+                    args.remote_gitdir = os.path.realpath(os.path.join(args.remote_base, dat.gitdir))
+                else:
+                    args.remote_gitdir = os.path.join(args.remote_base, '.git')
+                    ensure_remote(args.sftp, args.remote_gitdir)
+
+                # configure paths
+                args.remote_config = os.path.join(args.remote_gitdir, 'xfer')
+                args.remote_exclude = os.path.join(args.remote_gitdir, 'info', 'exclude')
+
+                # read remote cache
+                args.remote_cache = []
+                args.remote_update = False
+                try:
+                    with args.sftp.open(args.remote_config, 'r') as fi:
+                        args.remote_cache = map(lambda x: x.rstrip(), fi.readlines())
+                except IOError:
+                    pass
             else:
-                args.remote_gitdir = os.path.join(args.remote_base, '.git')
-                ensure_remote(args.sftp, args.remote_gitdir)
-
-            # configure paths
-            args.remote_config = os.path.join(args.remote_gitdir, 'xfer')
-            args.remote_exclude = os.path.join(args.remote_gitdir, 'info', 'exclude')
-
-            # read remote cache
-            args.remote_cache = []
-            args.remote_update = False
-            try:
-                with args.sftp.open(args.remote_config, 'r') as fi:
-                    args.remote_cache = map(lambda x: x.rstrip(), fi.readlines())
-            except IOError:
-                pass
-        else:
-            raise NotImplementedError('Remote type {} not currently supported!'.format(args.type))
+                raise NotImplementedError('Remote type {} not currently supported!'.format(args.type))
 
         # run entry point
         ret = func(args)
 
-        if args.type == 'ssh':
-            # update remote cache
-            if args.remote_update:
-                try:
-                    with args.sftp.open(args.remote_config, 'w') as fo:
-                        fo.write('\n'.join(args.remote_cache))
-                    with args.sftp.open(args.remote_exclude, 'w') as fo:
-                        fo.write('\n'.join(args.remote_cache))
-                except IOError:
-                    pass
+        if args.remote != 'local':
+            if args.type == 'ssh':
+                # update remote cache
+                if args.remote_update:
+                    try:
+                        with args.sftp.open(args.remote_config, 'w') as fo:
+                            fo.write('\n'.join(args.remote_cache))
+                        with args.sftp.open(args.remote_exclude, 'w') as fo:
+                            fo.write('\n'.join(args.remote_cache))
+                    except IOError:
+                        pass
 
-            # close connection
-            args.sftp.close()
-            args.ssh.close()
+                # close connection
+                args.sftp.close()
+                args.ssh.close()
         return ret
     return decorator
 
@@ -258,6 +260,7 @@ def add(args):
 
 
 @local_context
+@remote_context
 def list(args):
     """
     List currently tracked files.
@@ -269,7 +272,8 @@ def list(args):
         if len(args.cache) > 0:
             sys.stdout.write('\n'.join(args.cache) + '\n')
     else:
-        raise NotImplementedError('Remote listing not yet implemented!')
+        if len(args.remote_cache) > 0:
+            sys.stdout.write('\n'.join(args.remote_cache) + '\n')
     return
 
 

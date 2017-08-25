@@ -357,10 +357,10 @@ def diff(args):
     local = set(args.cache)
     remote = set(args.remote_cache)
     here = local.difference(remote)
-    for item in here:
+    for item in sorted(here):
         sys.stdout.write('< {}'.format(item) + '\n')
     there = remote.difference(local)
-    for item in there:
+    for item in sorted(there):
         sys.stdout.write('> {}'.format(item) + '\n')
     return
 
@@ -378,7 +378,8 @@ def push(args):
         local = set(args.cache)
         remote = set(args.remote_cache)
         here = local.difference(remote)
-        for path in here:
+        for path in sorted(here):
+            print('push: {}'.format(path))
             ensure_remote(args.sftp, os.path.dirname(os.path.join(args.remote_base, path)))
             args.sftp.put(
                 os.path.join(args.base, path),
@@ -405,7 +406,8 @@ def pull(args):
     local = set(args.cache)
     remote = set(args.remote_cache)
     there = remote.difference(local)
-    for path in there:
+    for path in sorted(there):
+        print('pull: {}'.format(path))
         ensure_local(os.path.dirname(os.path.join(args.base, path)))
         args.sftp.get(
             os.path.join(args.remote_base, path),

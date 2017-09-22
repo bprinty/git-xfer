@@ -387,6 +387,7 @@ def push(args):
         remote = set(args.remote_cache)
         here = local.difference(remote)
         for path in sorted(here):
+            print('push: {}'.format(path))
             ensure_remote(args.sftp, os.path.dirname(os.path.join(args.remote_base, path)))
             args.sftp.put(
                 os.path.join(args.base, path),
@@ -414,6 +415,7 @@ def pull(args):
     remote = set(args.remote_cache)
     there = remote.difference(local)
     for path in sorted(there):
+        print('pull: {}'.format(path))
         ensure_local(os.path.dirname(os.path.join(args.base, path)))
         args.sftp.get(
             os.path.join(args.remote_base, path),

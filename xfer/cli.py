@@ -43,8 +43,13 @@ def local_context(func):
             with open(os.path.join(args.base, '.git'), 'r') as fi:
                 dat = composite.load(fi)
             args.gitdir = os.path.realpath(os.path.join(args.base, dat.gitdir))
-        args.config = os.path.join(args.gitdir, 'xfer')
         args.exclude = os.path.join(args.gitdir, 'info', 'exclude')
+
+        # set up config
+        if os.path.exists(os.path.join(args.base, '.xfer')):
+            args.config = os.path.join(args.base, '.xfer')
+        else:
+            args.config = os.path.join(args.gitdir, 'xfer')
         if not os.path.exists(args.config):
             open(args.config, 'a').close()
         if not os.path.exists(args.exclude):
@@ -116,10 +121,13 @@ def remote_context(func):
                 else:
                     args.remote_gitdir = os.path.join(args.remote_base, '.git')
                     ensure_remote(args.sftp, args.remote_gitdir)
-
-                # configure paths
-                args.remote_config = os.path.join(args.remote_gitdir, 'xfer')
                 args.remote_exclude = os.path.join(args.remote_gitdir, 'info', 'exclude')
+
+                # config path
+                if os.path.exists(os.path.join(args.remote_base, '.xfer')):
+                    args.remote_config = os.path.join(args.remote_base, '.xfer')
+                else:
+                    args.remote_config = os.path.join(args.remote_gitdir, 'xfer')
 
                 # read remote cache
                 args.remote_cache = []
@@ -357,10 +365,10 @@ def diff(args):
     local = set(args.cache)
     remote = set(args.remote_cache)
     here = local.difference(remote)
-    for item in here:
+    for item in sorted(here):
         sys.stdout.write('< {}'.format(item) + '\n')
     there = remote.difference(local)
-    for item in there:
+    for item in sorted(there):
         sys.stdout.write('> {}'.format(item) + '\n')
     return
 
@@ -378,7 +386,7 @@ def push(args):
         local = set(args.cache)
         remote = set(args.remote_cache)
         here = local.difference(remote)
-        for path in here:
+        for path in sorted(here):
             ensure_remote(args.sftp, os.path.dirname(os.path.join(args.remote_base, path)))
             args.sftp.put(
                 os.path.join(args.base, path),
@@ -405,7 +413,7 @@ def pull(args):
     local = set(args.cache)
     remote = set(args.remote_cache)
     there = remote.difference(local)
-    for path in there:
+    for path in sorted(there):
         ensure_local(os.path.dirname(os.path.join(args.base, path)))
         args.sftp.get(
             os.path.join(args.remote_base, path),

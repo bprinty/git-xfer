@@ -45,7 +45,7 @@ def tearDown():
 class TestEntryPoints(unittest.TestCase):
     config = os.path.join(__base__, '.git', 'xfer')
     remote = 'testing'
-    port = 9001
+    port = 2222
     location = '/tmp/git-xfer'
 
     def setUp(self):

@@ -124,7 +124,7 @@ def remote_context(func):
                 args.remote_exclude = os.path.join(args.remote_gitdir, 'info', 'exclude')
 
                 # config path
-                if os.path.exists(os.path.join(args.remote_base, '.xfer')):
+                if remote_exists(args.sftp, os.path.join(args.remote_base, '.xfer')):
                     args.remote_config = os.path.join(args.remote_base, '.xfer')
                 else:
                     args.remote_config = os.path.join(args.remote_gitdir, 'xfer')

@@ -384,16 +384,15 @@ def push(args):
     """
     if args.type == 'ssh':
         local = set(args.cache)
-        remote = set(args.remote_cache)
-        here = local.difference(remote)
-        for path in sorted(here):
-            print('push: {}'.format(path))
-            ensure_remote(args.sftp, os.path.dirname(os.path.join(args.remote_base, path)))
-            args.sftp.put(
-                os.path.join(args.base, path),
-                os.path.join(args.remote_base, path)
-            )
-            args.remote_cache.append(path)
+        for path in sorted(args.cache):
+            if os.path.exists(os.path.join(args.base, path)) and not remote_exists(args.sftp, os.path.join(args.remote_base, path)):
+                print('push: {}'.format(path))
+                ensure_remote(args.sftp, os.path.dirname(os.path.join(args.remote_base, path)))
+                args.sftp.put(
+                    os.path.join(args.base, path),
+                    os.path.join(args.remote_base, path)
+                )
+                args.remote_cache.append(path)
             args.remote_update = True
     elif args.type == 's3':
         raise NotImplementedError('s3:// remote type not yet supported!')
@@ -411,17 +410,15 @@ def pull(args):
     Args:
         args (obj): Arguments from command line.
     """
-    local = set(args.cache)
-    remote = set(args.remote_cache)
-    there = remote.difference(local)
-    for path in sorted(there):
-        print('pull: {}'.format(path))
-        ensure_local(os.path.dirname(os.path.join(args.base, path)))
-        args.sftp.get(
-            os.path.join(args.remote_base, path),
-            os.path.join(args.base, path)
-        )
-        args.cache.append(path)
+    for path in sorted(args.remote_cache):
+        if not os.path.exists(os.path.join(args.base, path)) and remote_exists(args.sftp, os.path.join(args.remote_base, path)):
+            print('pull: {}'.format(path))
+            ensure_local(os.path.dirname(os.path.join(args.base, path)))
+            args.sftp.get(
+                os.path.join(args.remote_base, path),
+                os.path.join(args.base, path)
+            )
+            args.cache.append(path)
         args.update = True
     return
 

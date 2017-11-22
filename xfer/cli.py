@@ -383,8 +383,8 @@ def push(args):
         args (obj): Arguments from command line.
     """
     if args.type == 'ssh':
-        local = set(args.cache)
-        for path in sorted(args.cache):
+        cache = set(args.remote_cache).union(set(args.cache))
+        for path in sorted(cache):
             if os.path.exists(os.path.join(args.base, path)) and not remote_exists(args.sftp, os.path.join(args.remote_base, path)):
                 print('push: {}'.format(path))
                 ensure_remote(args.sftp, os.path.dirname(os.path.join(args.remote_base, path)))
@@ -410,7 +410,8 @@ def pull(args):
     Args:
         args (obj): Arguments from command line.
     """
-    for path in sorted(args.remote_cache):
+    cache = set(args.remote_cache).union(set(args.cache))
+    for path in sorted(cache):
         if not os.path.exists(os.path.join(args.base, path)) and remote_exists(args.sftp, os.path.join(args.remote_base, path)):
             print('pull: {}'.format(path))
             ensure_local(os.path.dirname(os.path.join(args.base, path)))

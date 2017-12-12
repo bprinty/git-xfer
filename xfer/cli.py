@@ -14,6 +14,7 @@ import sys
 import getpass
 import subprocess
 import paramiko
+import hashlib
 from ConfigParser import SafeConfigParser
 from gems import filetree, composite
 
@@ -212,6 +213,62 @@ def ensure_local(path):
     if not os.path.exists(path):
         os.makedirs(path)
     return
+
+
+def md5(path, limit=1000):
+    h = hashlib.sha256()
+    with open(path, 'rb', buffering=0) as fi:
+        count = 0
+        for b in iter(lambda : fi.read(128*1024), b''):
+            if count > limit:
+                break
+            h.update(b)
+            count += 1
+  return h.hexdigest()
+
+
+
+# classes
+# -------
+class Cache(object):
+    """
+    File Structure:
+
+        - path: path/to/file.txt
+          hash: a9e83fa8afd8
+          date: 2017-12-1213:41:37.173033
+    """
+    DFORMAT = '%Y-%m-%d %H:%M:%S'
+
+    def __init__(self, path):
+        with open(path, 'r') as fi:
+            :
+
+        return
+
+    def write(self, filename=None):
+        if filename is None:
+            filename = self.path
+        with open(filename, 'w') as fo:
+            yaml.dump(self.path)
+        return
+
+
+class Remote(object):
+    
+    def __init__(self, path):
+        self.path = path
+        return
+
+    @cached_property
+    def config(self):
+        return
+
+    def push(self, dest):
+        return
+
+    def pull(self, source):
+        return
 
 
 # entry points
